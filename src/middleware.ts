@@ -41,11 +41,12 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check auth state for protected/auth routes
+  // Redirect locale root (e.g. /zh, /en) to dashboard or login
+  const isLocaleRoot = path === "/" || path === "";
   const isProtected = PROTECTED_PATHS.some((p) => path.startsWith(p));
   const isAuthPage = AUTH_PATHS.some((p) => path.startsWith(p));
 
-  if (isProtected || isAuthPage) {
+  if (isLocaleRoot || isProtected || isAuthPage) {
     try {
       const { createServerClient } = await import("@supabase/ssr");
       const supabase = createServerClient(
@@ -61,6 +62,12 @@ export async function middleware(request: NextRequest) {
         },
       );
       const { data: { user } } = await supabase.auth.getUser();
+
+      if (isLocaleRoot) {
+        const url = request.nextUrl.clone();
+        url.pathname = user ? `/${locale}/dashboard` : `/${locale}/login`;
+        return NextResponse.redirect(url);
+      }
 
       if (isProtected && !user) {
         const url = request.nextUrl.clone();
