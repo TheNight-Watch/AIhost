@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Host - Script Lines | Futuristic</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg-primary: #0a0a0f;
+    --bg-secondary: #111118;
+    --bg-card: #16161f;
+    --bg-elevated: #1c1c28;
+    --text-primary: #e8e8ed;
+    --text-secondary: #8b8b9e;
+    --text-muted: #55556a;
+    --border: #2a2a3a;
+    --border-glow: rgba(139, 92, 246, 0.3);
+    --gradient-1: linear-gradient(135deg, #7c3aed, #2563eb, #06b6d4);
+    --gradient-2: linear-gradient(135deg, #7c3aed, #ec4899);
+    --gradient-text: linear-gradient(135deg, #a78bfa, #60a5fa, #22d3ee);
+    --neon-purple: #a78bfa;
+    --neon-blue: #60a5fa;
+    --neon-cyan: #22d3ee;
+    --neon-pink: #f472b6;
+    --success: #34d399;
+    --warning: #fbbf24;
+    --shadow-glow: 0 0 20px rgba(124, 58, 237, 0.15);
+    --radius: 12px;
+  }
+
+  body {
+    font-family: 'Inter', 'Noto Sans SC', -apple-system, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* Subtle grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 20% 0%, rgba(124, 58, 237, 0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 100%, rgba(6, 182, 212, 0.06) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ===== Top Navigation ===== */
+  .navbar {
+    background: rgba(10, 10, 15, 0.8);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .navbar-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .logo {
+    font-size: 18px;
+    font-weight: 700;
+    background: var(--gradient-text);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.5px;
+  }
+
+  .nav-divider {
+    width: 1px;
+    height: 24px;
+    background: var(--border);
+  }
+
+  .project-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+
+  .navbar-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .voice-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    background: var(--bg-card);
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+
+  .voice-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--neon-cyan);
+    box-shadow: 0 0 8px rgba(34, 211, 238, 0.5);
+  }
+
+  .lang-switch {
+    font-size: 13px;
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    padding: 5px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    background: transparent;
+    transition: all 0.2s;
+  }
+
+  .lang-switch:hover { border-color: var(--neon-purple); color: var(--neon-purple); }
+
+  .avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--gradient-1);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  /* ===== Action Bar ===== */
+  .action-bar {
+    background: rgba(17, 17, 24, 0.8);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    z-index: 50;
+  }
+
+  .action-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .btn-primary {
+    background: var(--gradient-1);
+    color: white;
+    border: none;
+    padding: 8px 22px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+    box-shadow: 0 0 20px rgba(124, 58, 237, 0.3);
+  }
+
+  .btn-primary:hover { box-shadow: 0 0 30px rgba(124, 58, 237, 0.5); transform: translateY(-1px); }
+
+  .btn-secondary {
+    background: var(--bg-card);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+  }
+
+  .btn-secondary:hover { border-color: var(--neon-purple); box-shadow: var(--shadow-glow); }
+
+  .action-bar-right {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  /* ===== Main Content ===== */
+  .main-content {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 32px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ===== Script Line Item ===== */
+  .script-list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .script-item {
+    display: flex;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: var(--radius);
+    padding: 2px;
+  }
+
+  .script-item:hover {
+    background: rgba(167, 139, 250, 0.04);
+  }
+
+  .script-item.selected {
+    background: rgba(167, 139, 250, 0.06);
+    box-shadow: inset 0 0 0 1px rgba(167, 139, 250, 0.15);
+  }
+
+  .script-item.playing {
+    background: rgba(251, 191, 36, 0.06);
+    box-shadow: inset 0 0 0 1px rgba(251, 191, 36, 0.2);
+  }
+
+  .script-item.playing .timeline-node {
+    background: var(--warning);
+    box-shadow: 0 0 12px rgba(251, 191, 36, 0.6);
+    animation: glow-pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes glow-pulse {
+    0%, 100% { box-shadow: 0 0 8px rgba(251, 191, 36, 0.4); }
+    50% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.7); }
+  }
+
+  /* Timeline */
+  .timeline-col {
+    width: 48px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .timeline-node {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--neon-purple);
+    box-shadow: 0 0 10px rgba(167, 139, 250, 0.5);
+    z-index: 2;
+    margin-top: 22px;
+    flex-shrink: 0;
+  }
+
+  .timeline-line {
+    width: 1px;
+    flex-grow: 1;
+    background: linear-gradient(to bottom, var(--neon-purple), rgba(167, 139, 250, 0.1));
+    margin-top: 4px;
+  }
+
+  .script-item:last-child .timeline-line { background: transparent; }
+
+  /* Content */
+  .script-content {
+    flex: 1;
+    padding: 16px 16px 16px 0;
+    min-width: 0;
+  }
+
+  .script-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .section-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    background: var(--gradient-1);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    padding: 3px 0;
+  }
+
+  .section-tag.guest {
+    background: var(--gradient-2);
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+
+  .section-tag.closing {
+    background: linear-gradient(135deg, #f472b6, #ef4444);
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+
+  .section-tag.transition {
+    background: linear-gradient(135deg, #34d399, #06b6d4);
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+
+  .script-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .script-item:hover .script-actions,
+  .script-item.selected .script-actions {
+    opacity: 1;
+  }
+
+  .btn-generate {
+    background: var(--bg-elevated);
+    color: var(--neon-purple);
+    border: 1px solid rgba(167, 139, 250, 0.3);
+    padding: 5px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-generate:hover {
+    background: rgba(167, 139, 250, 0.1);
+    box-shadow: 0 0 12px rgba(167, 139, 250, 0.2);
+  }
+
+  .btn-generate.generated {
+    color: var(--neon-cyan);
+    border-color: rgba(34, 211, 238, 0.3);
+  }
+
+  .script-text {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text-primary);
+    padding: 12px 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    min-height: 48px;
+    outline: none;
+    width: 100%;
+    transition: all 0.2s;
+  }
+
+  .script-text:focus {
+    border-color: var(--neon-purple);
+    box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.1), 0 0 20px rgba(167, 139, 250, 0.05);
+  }
+
+  /* Audio Player */
+  .audio-player {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg-elevated);
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+
+  .play-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--gradient-1);
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 11px;
+    box-shadow: 0 0 10px rgba(124, 58, 237, 0.3);
+  }
+
+  .waveform {
+    flex: 1;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .waveform-bar {
+    width: 3px;
+    border-radius: 2px;
+    opacity: 0.3;
+    background: var(--neon-cyan);
+  }
+
+  .waveform-bar.active {
+    opacity: 1;
+    box-shadow: 0 0 4px rgba(34, 211, 238, 0.3);
+  }
+
+  .audio-duration {
+    font-size: 12px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ===== Status Bar ===== */
+  .status-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(10, 10, 15, 0.85);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border);
+    padding: 10px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--text-secondary);
+    z-index: 100;
+  }
+
+  .status-items {
+    display: flex;
+    gap: 24px;
+  }
+
+  .status-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .status-item strong {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  .progress-bar-container {
+    width: 80px;
+    height: 4px;
+    background: var(--bg-elevated);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--gradient-1);
+    border-radius: 2px;
+    box-shadow: 0 0 8px rgba(124, 58, 237, 0.4);
+  }
+</style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+  <div class="navbar-left">
+    <div class="logo">AIHost</div>
+    <div class="nav-divider"></div>
+    <div class="project-name">2024 Annual Tech Summit</div>
+  </div>
+  <div class="navbar-right">
+    <div class="voice-status">
+      <span class="voice-dot"></span>
+      Voice: Yunxi (Male)
+    </div>
+    <button class="lang-switch">EN / CN</button>
+    <div class="avatar">LH</div>
+  </div>
+</nav>
+
+<!-- Action Bar -->
+<div class="action-bar">
+  <div class="action-bar-left">
+    <button class="btn-primary">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      Generate All Audio
+    </button>
+    <button class="btn-secondary">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+      Auto Broadcast
+    </button>
+  </div>
+  <div class="action-bar-right">Last saved 2 min ago</div>
+</div>
+
+<!-- Main Content -->
+<div class="main-content">
+  <div class="script-list">
+
+    <!-- Item 1 -->
+    <div class="script-item selected">
+      <div class="timeline-col">
+        <div class="timeline-node"></div>
+        <div class="timeline-line"></div>
+      </div>
+      <div class="script-content">
+        <div class="script-header">
+          <span class="section-tag">OPENING</span>
+          <div class="script-actions">
+            <button class="btn-generate generated">&#10003; Generated</button>
+          </div>
+        </div>
+        <div class="script-text" contenteditable="true">Ladies and gentlemen, welcome to the 2024 Annual Tech Summit! I'm your AI host for today's event. Over the next few hours, we'll explore the cutting-edge innovations shaping our future.</div>
+        <div class="audio-player">
+          <button class="play-btn">&#9654;</button>
+          <div class="waveform" id="waveform1"></div>
+          <span class="audio-duration">0:12</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Item 2 -->
+    <div class="script-item">
+      <div class="timeline-col">
+        <div class="timeline-node"></div>
+        <div class="timeline-line"></div>
+      </div>
+      <div class="script-content">
+        <div class="script-header">
+          <span class="section-tag transition">AGENDA OVERVIEW</span>
+          <div class="script-actions">
+            <button class="btn-generate generated">&#10003; Generated</button>
+          </div>
+        </div>
+        <div class="script-text" contenteditable="true">Let me walk you through today's agenda. We have three keynote sessions, two panel discussions, and a networking break. Each session is designed to give you actionable insights you can take back to your teams.</div>
+        <div class="audio-player">
+          <button class="play-btn">&#9654;</button>
+          <div class="waveform" id="waveform2"></div>
+          <span class="audio-duration">0:15</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Item 3 - Playing -->
+    <div class="script-item playing">
+      <div class="timeline-col">
+        <div class="timeline-node"></div>
+        <div class="timeline-line"></div>
+      </div>
+      <div class="script-content">
+        <div class="script-header">
+          <span class="section-tag guest">GUEST: DR. SARAH CHEN</span>
+          <div class="script-actions" style="opacity:1">
+            <button class="btn-generate generated">&#10003; Generated</button>
+          </div>
+        </div>
+        <div class="script-text" contenteditable="true">Now it's my great pleasure to introduce our first keynote speaker, Dr. Sarah Chen. She is the Chief AI Officer at TechVision Labs and has been at the forefront of responsible AI development for over a decade.</div>
+        <div class="audio-player">
+          <button class="play-btn">&#9646;&#9646;</button>
+          <div class="waveform" id="waveform3"></div>
+          <span class="audio-duration">0:18</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Item 4 -->
+    <div class="script-item">
+      <div class="timeline-col">
+        <div class="timeline-node"></div>
+        <div class="timeline-line"></div>
+      </div>
+      <div class="script-content">
+        <div class="script-header">
+          <span class="section-tag transition">TRANSITION</span>
+          <div class="script-actions">
+            <button class="btn-generate">Generate</button>
+          </div>
+        </div>
+        <div class="script-text" contenteditable="true">Thank you, Dr. Chen, for that incredibly insightful presentation. Before we move on, let's take a quick five-minute break. Please help yourselves to refreshments in the lobby.</div>
+      </div>
+    </div>
+
+    <!-- Item 5 -->
+    <div class="script-item">
+      <div class="timeline-col">
+        <div class="timeline-node"></div>
+        <div class="timeline-line"></div>
+      </div>
+      <div class="script-content">
+        <div class="script-header">
+          <span class="section-tag guest">GUEST: MARK JOHNSON</span>
+          <div class="script-actions">
+            <button class="btn-generate">Generate</button>
+          </div>
+        </div>
+        <div class="script-text" contenteditable="true">Welcome back, everyone. Our second speaker is Mark Johnson, VP of Product at CloudScale. Mark will share how enterprise companies are integrating AI-powered workflows into their daily operations.</div>
+      </div>
+    </div>
+
+    <!-- Item 6 -->
+    <div class="script-item">
+      <div class="timeline-col">
+        <div class="timeline-node"></div>
+        <div class="timeline-line"></div>
+      </div>
+      <div class="script-content">
+        <div class="script-header">
+          <span class="section-tag">PANEL DISCUSSION</span>
+          <div class="script-actions">
+            <button class="btn-generate">Generate</button>
+          </div>
+        </div>
+        <div class="script-text" contenteditable="true">Let's now move into our panel discussion on "The Future of Human-AI Collaboration." I'd like to invite all three panelists to join me on stage. We'll be taking questions from the audience in about twenty minutes.</div>
+      </div>
+    </div>
+
+    <!-- Item 7 -->
+    <div class="script-item">
+      <div class="timeline-col">
+        <div class="timeline-node"></div>
+        <div class="timeline-line"></div>
+      </div>
+      <div class="script-content">
+        <div class="script-header">
+          <span class="section-tag transition">Q&A SESSION</span>
+          <div class="script-actions">
+            <button class="btn-generate">Generate</button>
+          </div>
+        </div>
+        <div class="script-text" contenteditable="true">We're now opening the floor for questions. Please raise your hand, and our staff will bring you a microphone. We have time for about five to six questions.</div>
+      </div>
+    </div>
+
+    <!-- Item 8 -->
+    <div class="script-item">
+      <div class="timeline-col">
+        <div class="timeline-node"></div>
+        <div class="timeline-line"></div>
+      </div>
+      <div class="script-content">
+        <div class="script-header">
+          <span class="section-tag closing">CLOSING REMARKS</span>
+          <div class="script-actions">
+            <button class="btn-generate">Generate</button>
+          </div>
+        </div>
+        <div class="script-text" contenteditable="true">And that brings us to the end of the 2024 Annual Tech Summit. Thank you all for being here. We hope today's discussions have sparked new ideas. See you at next year's summit!</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Status Bar -->
+<div class="status-bar">
+  <div class="status-items">
+    <div class="status-item">Lines: <strong>8</strong></div>
+    <div class="status-item">Generated: <strong>3 / 8</strong></div>
+    <div class="status-item">
+      <div class="progress-bar-container">
+        <div class="progress-bar-fill" style="width: 37.5%"></div>
+      </div>
+      37.5%
+    </div>
+  </div>
+  <div class="status-item">Est. duration: <strong>~4 min 30 sec</strong></div>
+</div>
+
+<script>
+document.querySelectorAll('.waveform').forEach(wf => {
+  const count = 60;
+  for (let i = 0; i < count; i++) {
+    const bar = document.createElement('div');
+    bar.className = 'waveform-bar' + (i < count * 0.4 ? ' active' : '');
+    bar.style.height = (Math.random() * 18 + 6) + 'px';
+    wf.appendChild(bar);
+  }
+});
+
+document.querySelectorAll('.script-item').forEach(item => {
+  item.addEventListener('click', function(e) {
+    if (e.target.closest('.btn-generate') || e.target.closest('.play-btn') || e.target.getAttribute('contenteditable')) return;
+    document.querySelectorAll('.script-item').forEach(i => i.classList.remove('selected'));
+    this.classList.add('selected');
+  });
+});
+</script>
+
+</body>
+</html>

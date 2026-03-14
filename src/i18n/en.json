@@ -1,0 +1,150 @@
+{
+  "common": {
+    "appName": "AI Host",
+    "login": "Login",
+    "register": "Register",
+    "dashboard": "Dashboard",
+    "upload": "Upload",
+    "voiceSelect": "Voice Select",
+    "script": "Script",
+    "logout": "Logout",
+    "language": "Language",
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading...",
+    "error": "Something went wrong"
+  },
+  "auth": {
+    "email": "Email",
+    "emailPlaceholder": "Enter your email",
+    "password": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "confirmPassword": "Confirm Password",
+    "confirmPasswordPlaceholder": "Enter your password again",
+    "username": "Username",
+    "usernamePlaceholder": "Enter your username",
+    "loginButton": "Sign In",
+    "registerButton": "Sign Up",
+    "noAccount": "Don't have an account?",
+    "goRegister": "Sign up",
+    "hasAccount": "Already have an account?",
+    "goLogin": "Sign in",
+    "loginSuccess": "Login successful",
+    "registerSuccess": "Registration successful! Please check your email to confirm.",
+    "errorInvalidEmail": "Please enter a valid email address",
+    "errorPasswordLength": "Password must be at least 6 characters",
+    "errorPasswordMismatch": "Passwords do not match",
+    "errorInvalidCredentials": "Invalid email or password",
+    "errorUserNotFound": "User not found",
+    "errorEmailTaken": "This email is already registered",
+    "errorGeneric": "Something went wrong, please try again",
+    "errorConnection": "Cannot connect to server, please check your network"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome back",
+    "createEvent": "Create New Event",
+    "noEvents": "No events yet. Click the button above to create your first one!",
+    "logoutConfirm": "Are you sure you want to sign out?",
+    "eventStatus": {
+      "draft": "Draft",
+      "ready": "Ready",
+      "live": "Live",
+      "completed": "Completed"
+    },
+    "scriptLines": "script lines",
+    "noScriptYet": "No script yet",
+    "loadingEvents": "Loading events...",
+    "errorLoadingEvents": "Failed to load events. Please refresh."
+  },
+  "upload": {
+    "title": "Create New Event",
+    "stepInfo": "Event Info",
+    "stepAgenda": "Upload Agenda",
+    "stepGenerate": "Generate Script",
+    "eventTitle": "Event Title",
+    "eventTitlePlaceholder": "e.g., 2026 AI Tech Conference",
+    "eventDate": "Event Date",
+    "eventDescription": "Description",
+    "eventDescriptionPlaceholder": "Briefly describe the event topic and content...",
+    "next": "Next",
+    "prev": "Previous",
+    "agendaTitle": "Upload Agenda",
+    "agendaDescription": "Upload an agenda image or paste the agenda text directly",
+    "uploadImage": "Upload Image",
+    "dropzoneText": "Drag & drop an agenda image here, or click to select",
+    "dropzoneHint": "Supports JPG, PNG formats",
+    "orText": "or",
+    "pasteAgenda": "Paste Agenda Text",
+    "pasteAgendaPlaceholder": "Paste the agenda content here...",
+    "generateScript": "Generate AI Script",
+    "generating": "AI is generating the script...",
+    "generatingHint": "This may take a few seconds",
+    "generateSuccess": "Script generated successfully!",
+    "generateError": "Generation failed, please try again",
+    "requiredField": "This field is required",
+    "agendaRequired": "Please upload an agenda image or paste agenda text",
+    "imagePreview": "Agenda Image Preview",
+    "removeImage": "Remove Image"
+  },
+  "voice": {
+    "title": "Select Voice",
+    "subtitle": "Choose an AI voice for your event",
+    "filterAll": "All",
+    "filterFemale": "Female",
+    "filterMale": "Male",
+    "filterEnglish": "English",
+    "preview": "Preview",
+    "select": "Select",
+    "selected": "Selected",
+    "confirm": "Confirm & Continue",
+    "noSelected": "None selected"
+  },
+  "script": {
+    "title": "Script Editor",
+    "generateAll": "Generate All Audio",
+    "broadcast": "Auto Broadcast",
+    "lines": "lines",
+    "generated": "Generated",
+    "pending": "Pending",
+    "playing": "Playing",
+    "generate": "Generate",
+    "done": "Done",
+    "aiChat": "AI Assistant",
+    "chatPlaceholder": "Type your message..."
+  },
+  "broadcast": {
+    "title": "Broadcast",
+    "live": "Live",
+    "ready": "Ready",
+    "timeline": "Timeline",
+    "nowPlaying": "Now Playing",
+    "autoAdvance": "Auto-advance",
+    "backToEditor": "Back to Editor"
+  },
+  "pages": {
+    "home": {
+      "title": "Welcome to AI Host",
+      "description": "AI-powered intelligent hosting platform"
+    },
+    "login": {
+      "title": "Login"
+    },
+    "register": {
+      "title": "Register"
+    },
+    "dashboard": {
+      "title": "Dashboard"
+    },
+    "upload": {
+      "title": "Upload Files"
+    },
+    "voiceSelect": {
+      "title": "Select Voice"
+    },
+    "script": {
+      "title": "Script Editor"
+    }
+  }
+}

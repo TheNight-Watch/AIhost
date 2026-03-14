@@ -1,0 +1,150 @@
+{
+  "common": {
+    "appName": "AI Host",
+    "login": "登录",
+    "register": "注册",
+    "dashboard": "仪表盘",
+    "upload": "上传",
+    "voiceSelect": "音色选择",
+    "script": "台词",
+    "logout": "退出登录",
+    "language": "语言",
+    "back": "返回",
+    "save": "保存",
+    "cancel": "取消",
+    "loading": "加载中...",
+    "error": "出错了"
+  },
+  "auth": {
+    "email": "邮箱",
+    "emailPlaceholder": "请输入邮箱地址",
+    "password": "密码",
+    "passwordPlaceholder": "请输入密码",
+    "confirmPassword": "确认密码",
+    "confirmPasswordPlaceholder": "请再次输入密码",
+    "username": "用户名",
+    "usernamePlaceholder": "请输入用户名",
+    "loginButton": "登录",
+    "registerButton": "注册",
+    "noAccount": "没有账号？",
+    "goRegister": "去注册",
+    "hasAccount": "已有账号？",
+    "goLogin": "去登录",
+    "loginSuccess": "登录成功",
+    "registerSuccess": "注册成功！请检查邮箱完成确认。",
+    "errorInvalidEmail": "请输入有效的邮箱地址",
+    "errorPasswordLength": "密码长度至少 6 位",
+    "errorPasswordMismatch": "两次输入的密码不一致",
+    "errorInvalidCredentials": "邮箱或密码错误",
+    "errorUserNotFound": "用户不存在",
+    "errorEmailTaken": "该邮箱已注册",
+    "errorGeneric": "操作失败，请稍后重试",
+    "errorConnection": "无法连接到服务器，请检查网络"
+  },
+  "dashboard": {
+    "title": "仪表盘",
+    "welcome": "欢迎回来",
+    "createEvent": "创建新活动",
+    "noEvents": "还没有活动，点击上方按钮创建第一个吧！",
+    "logoutConfirm": "确定要退出登录吗？",
+    "eventStatus": {
+      "draft": "草稿",
+      "ready": "就绪",
+      "live": "直播中",
+      "completed": "已完成"
+    },
+    "scriptLines": "条台词",
+    "noScriptYet": "暂无台词",
+    "loadingEvents": "正在加载活动列表...",
+    "errorLoadingEvents": "加载活动失败，请刷新重试"
+  },
+  "upload": {
+    "title": "创建新活动",
+    "stepInfo": "活动信息",
+    "stepAgenda": "上传议程",
+    "stepGenerate": "生成台词",
+    "eventTitle": "活动标题",
+    "eventTitlePlaceholder": "例如：2026 AI 技术大会",
+    "eventDate": "活动日期",
+    "eventDescription": "活动描述",
+    "eventDescriptionPlaceholder": "简要描述活动内容和主题...",
+    "next": "下一步",
+    "prev": "上一步",
+    "agendaTitle": "上传议程",
+    "agendaDescription": "上传议程图片或直接粘贴议程文本",
+    "uploadImage": "上传图片",
+    "dropzoneText": "将议程图片拖拽到此处，或点击选择文件",
+    "dropzoneHint": "支持 JPG、PNG 格式",
+    "orText": "或者",
+    "pasteAgenda": "粘贴议程文本",
+    "pasteAgendaPlaceholder": "将议程内容粘贴到这里...",
+    "generateScript": "生成 AI 台词",
+    "generating": "AI 正在生成台词...",
+    "generatingHint": "这可能需要几秒钟",
+    "generateSuccess": "台词生成成功！",
+    "generateError": "生成失败，请重试",
+    "requiredField": "此项为必填",
+    "agendaRequired": "请上传议程图片或粘贴议程文本",
+    "imagePreview": "议程图片预览",
+    "removeImage": "移除图片"
+  },
+  "voice": {
+    "title": "选择音色",
+    "subtitle": "为您的活动选择 AI 声音",
+    "filterAll": "全部",
+    "filterFemale": "女声",
+    "filterMale": "男声",
+    "filterEnglish": "英文",
+    "preview": "试听",
+    "select": "选择",
+    "selected": "已选择",
+    "confirm": "确认并继续",
+    "noSelected": "未选择"
+  },
+  "script": {
+    "title": "台词编辑",
+    "generateAll": "生成全部音频",
+    "broadcast": "自动播报",
+    "lines": "条",
+    "generated": "已生成",
+    "pending": "待生成",
+    "playing": "播放中",
+    "generate": "生成",
+    "done": "完成",
+    "aiChat": "AI 助手",
+    "chatPlaceholder": "输入您的消息..."
+  },
+  "broadcast": {
+    "title": "播报",
+    "live": "直播",
+    "ready": "就绪",
+    "timeline": "时间轴",
+    "nowPlaying": "当前播放",
+    "autoAdvance": "自动跳转",
+    "backToEditor": "返回编辑"
+  },
+  "pages": {
+    "home": {
+      "title": "欢迎使用 AI Host",
+      "description": "AI 驱动的智能主持人平台"
+    },
+    "login": {
+      "title": "登录"
+    },
+    "register": {
+      "title": "注册"
+    },
+    "dashboard": {
+      "title": "仪表盘"
+    },
+    "upload": {
+      "title": "上传文件"
+    },
+    "voiceSelect": {
+      "title": "选择音色"
+    },
+    "script": {
+      "title": "台词编辑"
+    }
+  }
+}

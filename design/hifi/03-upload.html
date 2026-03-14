@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI HOST // CREATE EVENT</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=DM+Serif+Display&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --mint: #98E4C9;
+    --cream: #FFF8E7;
+    --peach: #FFD4B8;
+    --teal: #2D6A5C;
+    --charcoal: #333;
+    --mint-light: #C8F0E2;
+    --mint-dark: #6BD4AF;
+    --window-bar: #E8E0D0;
+    --font-mono: 'IBM Plex Mono', 'Courier New', monospace;
+    --font-serif: 'DM Serif Display', serif;
+    --radius: 14px;
+  }
+
+  body {
+    font-family: var(--font-mono);
+    background: var(--cream);
+    color: var(--charcoal);
+    min-height: 100vh;
+    padding-bottom: 60px;
+  }
+
+  /* ===== NAVBAR ===== */
+  .navbar {
+    display: flex;
+    align-items: center;
+    background: var(--teal);
+    color: var(--cream);
+    height: 38px;
+    padding: 0 16px;
+    gap: 24px;
+    font-size: 13px;
+    font-weight: 500;
+    border-bottom: 3px solid #1F4F44;
+  }
+
+  .nav-logo {
+    font-family: var(--font-serif);
+    font-size: 20px;
+    letter-spacing: 0.02em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: var(--cream);
+  }
+
+  .nav-logo .pixel-icon {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    background: var(--mint);
+    border-radius: 4px;
+    border: 2px solid var(--cream);
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 4px;
+    flex: 1;
+  }
+
+  .nav-link {
+    color: var(--cream);
+    text-decoration: none;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+
+  .nav-link:hover { background: rgba(255,255,255,0.15); }
+  .nav-link.active { background: var(--mint); color: var(--teal); font-weight: 700; }
+
+  .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 11px;
+  }
+
+  .nav-user {
+    background: var(--peach);
+    color: var(--charcoal);
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  /* ===== WIZARD PROGRESS ===== */
+  .wizard-bar {
+    background: var(--mint-light);
+    border-bottom: 2px dashed var(--mint-dark);
+    padding: 16px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .step-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #aaa;
+    transition: all 0.3s;
+  }
+
+  .step-item.active {
+    color: var(--teal);
+  }
+
+  .step-item.done {
+    color: var(--mint-dark);
+  }
+
+  .step-icon {
+    width: 36px;
+    height: 36px;
+    border: 2px solid #ccc;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 13px;
+    background: var(--cream);
+    transition: all 0.3s;
+  }
+
+  .step-item.active .step-icon {
+    border-color: var(--teal);
+    background: var(--teal);
+    color: var(--cream);
+  }
+
+  .step-item.done .step-icon {
+    border-color: var(--mint-dark);
+    background: var(--mint);
+    color: var(--teal);
+  }
+
+  .step-connector {
+    width: 60px;
+    height: 2px;
+    background: #ddd;
+    border-radius: 2px;
+    position: relative;
+  }
+
+  .step-connector.done {
+    background: var(--mint-dark);
+  }
+
+  /* ===== MAIN CONTENT ===== */
+  .main-content {
+    max-width: 700px;
+    margin: 28px auto;
+    padding: 0 20px;
+  }
+
+  /* ===== WINDOW ===== */
+  .window {
+    border: 2px solid var(--charcoal);
+    border-radius: var(--radius);
+    background: var(--cream);
+    overflow: hidden;
+    box-shadow: 4px 4px 0 rgba(45, 106, 92, 0.1);
+  }
+
+  .window-bar {
+    background: var(--window-bar);
+    border-bottom: 2px solid var(--charcoal);
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+  }
+
+  .window-dots {
+    display: flex;
+    gap: 6px;
+  }
+
+  .window-dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    border: 1.5px solid var(--charcoal);
+  }
+  .window-dot.red { background: #FF6B6B; }
+  .window-dot.yellow { background: #FFDA6B; }
+  .window-dot.green { background: #6BD4AF; }
+
+  .window-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    flex: 1;
+    text-align: center;
+    color: var(--charcoal);
+  }
+
+  .window-body {
+    padding: 28px 24px;
+  }
+
+  /* ===== FORM ELEMENTS ===== */
+  .form-group {
+    margin-bottom: 22px;
+  }
+
+  .form-label {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin-bottom: 8px;
+  }
+
+  .form-input, .form-textarea {
+    width: 100%;
+    padding: 12px 14px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    background: #fff;
+    border: 2px solid var(--charcoal);
+    border-radius: 10px;
+    color: var(--charcoal);
+    outline: none;
+    transition: all 0.2s;
+  }
+
+  .form-input:focus, .form-textarea:focus {
+    border-color: var(--teal);
+    box-shadow: 0 0 0 3px rgba(152, 228, 201, 0.3);
+  }
+
+  .form-textarea {
+    resize: vertical;
+    min-height: 100px;
+    line-height: 1.6;
+  }
+
+  /* ===== UPLOAD ZONE ===== */
+  .upload-zone {
+    border: 3px dashed var(--teal);
+    border-radius: var(--radius);
+    padding: 40px 24px;
+    text-align: center;
+    background: #FFFDF5;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+  }
+
+  .upload-zone:hover {
+    background: var(--mint-light);
+    border-color: var(--charcoal);
+  }
+
+  .upload-zone.dragover {
+    background: var(--mint-light);
+    border-color: var(--charcoal);
+    transform: scale(1.01);
+  }
+
+  .upload-zone.has-file {
+    border-style: solid;
+    border-color: var(--mint-dark);
+    background: var(--mint-light);
+  }
+
+  .upload-icon {
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 16px;
+    background: var(--mint);
+    border: 2px solid var(--teal);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: var(--teal);
+  }
+
+  .upload-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--teal);
+    margin-bottom: 6px;
+  }
+
+  .upload-desc {
+    font-size: 11px;
+    color: #888;
+    margin-bottom: 4px;
+  }
+
+  .upload-formats {
+    font-size: 10px;
+    color: #bbb;
+    letter-spacing: 0.05em;
+  }
+
+  .upload-input {
+    display: none;
+  }
+
+  /* File preview */
+  .file-preview {
+    display: none;
+    margin-top: 16px;
+  }
+
+  .file-preview.show {
+    display: block;
+  }
+
+  .file-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    background: #fff;
+    border: 2px solid var(--charcoal);
+    border-radius: 10px;
+  }
+
+  .file-thumb {
+    width: 48px;
+    height: 48px;
+    background: var(--mint-light);
+    border: 2px solid var(--teal);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .file-info {
+    flex: 1;
+  }
+
+  .file-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--charcoal);
+  }
+
+  .file-size {
+    font-size: 10px;
+    color: #999;
+    margin-top: 2px;
+  }
+
+  .file-remove {
+    width: 28px;
+    height: 28px;
+    background: #FFE0E0;
+    border: 2px solid #FF6B6B;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    color: #FF6B6B;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .file-remove:hover {
+    background: #FF6B6B;
+    color: #fff;
+  }
+
+  /* OR divider */
+  .or-divider {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 24px 0;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: #aaa;
+    font-weight: 700;
+  }
+
+  .or-divider::before,
+  .or-divider::after {
+    content: '';
+    flex: 1;
+    border-top: 2px dashed #ddd;
+  }
+
+  /* ===== BUTTONS ===== */
+  .btn-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+  }
+
+  .btn-back {
+    padding: 12px 24px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--window-bar);
+    color: var(--charcoal);
+    border: 2px solid var(--charcoal);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-back:hover { background: #ddd; }
+
+  .btn-next {
+    flex: 1;
+    padding: 12px 24px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    background: var(--mint);
+    color: var(--teal);
+    border: 2px solid var(--charcoal);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    box-shadow: 0 4px 0 var(--teal), 0 6px 0 var(--charcoal);
+    position: relative;
+    top: 0;
+  }
+
+  .btn-next:hover {
+    background: var(--mint-dark);
+    top: 1px;
+    box-shadow: 0 3px 0 var(--teal), 0 5px 0 var(--charcoal);
+  }
+
+  .btn-next:active {
+    top: 4px;
+    box-shadow: 0 0px 0 var(--teal), 0 1px 0 var(--charcoal);
+  }
+
+  .btn-generate {
+    width: 100%;
+    padding: 16px 24px;
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: var(--teal);
+    color: var(--cream);
+    border: 2px solid var(--charcoal);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    box-shadow: 0 5px 0 #1F4F44, 0 7px 0 var(--charcoal);
+    position: relative;
+    top: 0;
+    margin-top: 20px;
+  }
+
+  .btn-generate:hover {
+    background: var(--charcoal);
+    color: var(--mint);
+    top: 2px;
+    box-shadow: 0 3px 0 #1F4F44, 0 5px 0 var(--charcoal);
+  }
+
+  .btn-generate:active {
+    top: 5px;
+    box-shadow: 0 0px 0 #1F4F44, 0 1px 0 var(--charcoal);
+  }
+
+  /* Step panels */
+  .step-panel {
+    display: none;
+  }
+
+  .step-panel.active {
+    display: block;
+  }
+
+  /* Summary section */
+  .summary-section {
+    margin-bottom: 20px;
+  }
+
+  .summary-row {
+    display: flex;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 2px dashed #eee;
+    font-size: 12px;
+  }
+
+  .summary-label {
+    font-weight: 700;
+    color: var(--teal);
+    min-width: 100px;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding-top: 2px;
+  }
+
+  .summary-value {
+    flex: 1;
+    color: var(--charcoal);
+    line-height: 1.5;
+  }
+
+  /* Loading animation */
+  .generate-progress {
+    display: none;
+    text-align: center;
+    padding: 32px 0;
+  }
+
+  .generate-progress.show {
+    display: block;
+  }
+
+  .progress-bar-container {
+    width: 100%;
+    height: 24px;
+    background: #fff;
+    border: 2px solid var(--charcoal);
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 16px 0;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--mint);
+    border-radius: 8px;
+    transition: width 0.5s;
+    position: relative;
+  }
+
+  .progress-bar-fill::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--teal);
+    border-radius: 2px;
+  }
+
+  .progress-text {
+    font-size: 12px;
+    color: var(--teal);
+    font-weight: 600;
+  }
+
+  @keyframes blink-cursor {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  .blinking-cursor {
+    display: inline-block;
+    width: 8px;
+    height: 14px;
+    background: var(--teal);
+    animation: blink-cursor 0.8s infinite;
+    vertical-align: middle;
+    margin-left: 4px;
+  }
+
+  /* Success state */
+  .success-state {
+    display: none;
+    text-align: center;
+    padding: 24px 0;
+  }
+
+  .success-state.show {
+    display: block;
+  }
+
+  .success-icon {
+    width: 64px;
+    height: 64px;
+    background: var(--mint);
+    border: 3px solid var(--teal);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    margin: 0 auto 16px;
+    color: var(--teal);
+  }
+
+  .success-title {
+    font-family: var(--font-serif);
+    font-size: 22px;
+    color: var(--teal);
+    margin-bottom: 8px;
+  }
+
+  .success-desc {
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 20px;
+  }
+
+  .btn-view-script {
+    display: inline-block;
+    padding: 12px 28px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    background: var(--mint);
+    color: var(--teal);
+    border: 2px solid var(--charcoal);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    box-shadow: 0 4px 0 var(--teal), 0 6px 0 var(--charcoal);
+    position: relative;
+    top: 0;
+    text-decoration: none;
+  }
+
+  .btn-view-script:hover {
+    background: var(--mint-dark);
+    top: 1px;
+    box-shadow: 0 3px 0 var(--teal), 0 5px 0 var(--charcoal);
+  }
+
+  /* Pixel divider */
+  .pixel-divider {
+    display: flex;
+    gap: 4px;
+    padding: 8px 0;
+    justify-content: center;
+    margin: 16px 0;
+  }
+
+  .pixel-block {
+    width: 6px;
+    height: 6px;
+    border-radius: 2px;
+  }
+
+  /* Status bar */
+  .status-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--teal);
+    color: var(--cream);
+    height: 48px;
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    gap: 32px;
+    z-index: 100;
+    border-top: 3px solid #1F4F44;
+    font-size: 12px;
+  }
+
+  .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .stat-label {
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    opacity: 0.6;
+  }
+
+  .stat-value {
+    font-weight: 700;
+    font-size: 14px;
+  }
+
+  .stat-spacer { flex: 1; }
+
+  .stat-sys {
+    font-size: 10px;
+    opacity: 0.4;
+  }
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a class="nav-logo" href="./02-dashboard.html">
+    <span class="pixel-icon"></span>
+    AI Host
+  </a>
+  <div class="nav-links">
+    <a class="nav-link" href="./02-dashboard.html">Dashboard</a>
+    <a class="nav-link active" href="#">Create</a>
+    <a class="nav-link" href="#">Help</a>
+  </div>
+  <div class="nav-right">
+    <span style="font-size:11px; opacity:0.8;">user@example.com</span>
+    <div class="nav-user">U</div>
+  </div>
+</nav>
+
+<!-- WIZARD PROGRESS BAR -->
+<div class="wizard-bar">
+  <div class="step-item active" id="step1indicator">
+    <div class="step-icon">1</div>
+    <span>Event Info</span>
+  </div>
+  <div class="step-connector" id="conn1"></div>
+  <div class="step-item" id="step2indicator">
+    <div class="step-icon">2</div>
+    <span>Upload Agenda</span>
+  </div>
+  <div class="step-connector" id="conn2"></div>
+  <div class="step-item" id="step3indicator">
+    <div class="step-icon">3</div>
+    <span>Generate Script</span>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main-content">
+
+  <!-- ===== STEP 1: Event Info ===== -->
+  <div class="step-panel active" id="panel1">
+    <div class="window">
+      <div class="window-bar">
+        <div class="window-dots">
+          <div class="window-dot red"></div>
+          <div class="window-dot yellow"></div>
+          <div class="window-dot green"></div>
+        </div>
+        <div class="window-title">new_event // step 1</div>
+      </div>
+      <div class="window-body">
+        <div class="form-group">
+          <label class="form-label">Event Title // name</label>
+          <input class="form-input" type="text" id="eventTitle" placeholder="e.g. 2026 Annual Tech Summit">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Event Date // schedule</label>
+          <input class="form-input" type="date" id="eventDate" value="2026-04-15">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description // details</label>
+          <textarea class="form-textarea" id="eventDesc" placeholder="Describe the event, including key agenda items, number of speakers, etc."></textarea>
+        </div>
+        <div class="btn-row">
+          <button class="btn-back" onclick="window.location.href='./02-dashboard.html'">Cancel</button>
+          <button class="btn-next" onclick="goToStep(2)">Next: Upload Agenda</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== STEP 2: Upload Agenda ===== -->
+  <div class="step-panel" id="panel2">
+    <div class="window">
+      <div class="window-bar">
+        <div class="window-dots">
+          <div class="window-dot red"></div>
+          <div class="window-dot yellow"></div>
+          <div class="window-dot green"></div>
+        </div>
+        <div class="window-title">agenda_upload // step 2</div>
+      </div>
+      <div class="window-body">
+
+        <!-- Upload zone -->
+        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+          <div class="upload-icon">&#128190;</div>
+          <div class="upload-title">Drag & drop your agenda image here</div>
+          <div class="upload-desc">or click to browse files</div>
+          <div class="upload-formats">Supported: PNG, JPG, PDF</div>
+          <input type="file" class="upload-input" id="fileInput" accept="image/*,.pdf">
+        </div>
+
+        <!-- File preview -->
+        <div class="file-preview" id="filePreview">
+          <div class="file-card">
+            <div class="file-thumb">&#128196;</div>
+            <div class="file-info">
+              <div class="file-name" id="fileName">agenda.png</div>
+              <div class="file-size" id="fileSize">2.4 MB</div>
+            </div>
+            <button class="file-remove" onclick="removeFile()">X</button>
+          </div>
+        </div>
+
+        <div class="or-divider">OR</div>
+
+        <!-- Text input -->
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Paste Agenda Text // manual input</label>
+          <textarea class="form-textarea" id="agendaText" placeholder="09:00 - Opening Ceremony&#10;09:30 - Keynote: AI in 2026&#10;10:30 - Panel Discussion&#10;11:30 - Networking Break&#10;12:00 - Workshop Session&#10;14:00 - Closing Remarks" style="min-height:140px"></textarea>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn-back" onclick="goToStep(1)">Back</button>
+          <button class="btn-next" onclick="goToStep(3)">Next: Review & Generate</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== STEP 3: Generate ===== -->
+  <div class="step-panel" id="panel3">
+    <div class="window">
+      <div class="window-bar">
+        <div class="window-dots">
+          <div class="window-dot red"></div>
+          <div class="window-dot yellow"></div>
+          <div class="window-dot green"></div>
+        </div>
+        <div class="window-title">generate // step 3</div>
+      </div>
+      <div class="window-body">
+
+        <!-- Summary -->
+        <div class="summary-section" id="summarySection">
+          <div class="summary-row">
+            <div class="summary-label">Title</div>
+            <div class="summary-value" id="sumTitle">2026 Annual Tech Summit</div>
+          </div>
+          <div class="summary-row">
+            <div class="summary-label">Date</div>
+            <div class="summary-value" id="sumDate">2026-04-15</div>
+          </div>
+          <div class="summary-row">
+            <div class="summary-label">Description</div>
+            <div class="summary-value" id="sumDesc">--</div>
+          </div>
+          <div class="summary-row">
+            <div class="summary-label">Agenda</div>
+            <div class="summary-value" id="sumAgenda">Image uploaded: agenda.png</div>
+          </div>
+        </div>
+
+        <div class="pixel-divider" id="pixel-divider-gen"></div>
+
+        <!-- Generate button -->
+        <div id="generateArea">
+          <button class="btn-generate" onclick="startGenerate()">&#10024; Generate AI Script</button>
+        </div>
+
+        <!-- Progress -->
+        <div class="generate-progress" id="progressArea">
+          <div class="progress-text" id="progressText">Analyzing agenda...<span class="blinking-cursor"></span></div>
+          <div class="progress-bar-container">
+            <div class="progress-bar-fill" id="progressBar"></div>
+          </div>
+        </div>
+
+        <!-- Success -->
+        <div class="success-state" id="successArea">
+          <div class="success-icon">&#10003;</div>
+          <div class="success-title">Script Generated!</div>
+          <div class="success-desc">6 script lines created based on your agenda. Ready for editing and voice selection.</div>
+          <a class="btn-view-script" href="./04-voice-select.html">Select Voice & Continue</a>
+        </div>
+
+        <div class="btn-row" id="step3Buttons">
+          <button class="btn-back" onclick="goToStep(2)">Back</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- STATUS BAR -->
+<div class="status-bar">
+  <div class="stat-item">
+    <span class="stat-label">Step</span>
+    <span class="stat-value" id="stepDisplay">1 / 3</span>
+  </div>
+  <div class="stat-item">
+    <span class="stat-label">Mode</span>
+    <span class="stat-value">Create</span>
+  </div>
+  <div class="stat-spacer"></div>
+  <div class="stat-sys">SYS.HOST.V2 // Event Wizard</div>
+</div>
+
+<script>
+  let currentStep = 1;
+  let uploadedFile = null;
+
+  // Pixel divider
+  function makePixels(el) {
+    const colors = ['#98E4C9', '#FFD4B8', '#2D6A5C', '#FFF8E7', '#98E4C9', '#FFD4B8'];
+    for (let i = 0; i < 50; i++) {
+      const block = document.createElement('div');
+      block.className = 'pixel-block';
+      block.style.background = colors[i % colors.length];
+      block.style.opacity = (Math.random() * 0.5 + 0.3).toFixed(2);
+      el.appendChild(block);
+    }
+  }
+  const genDiv = document.getElementById('pixel-divider-gen');
+  if (genDiv) makePixels(genDiv);
+
+  function goToStep(step) {
+    // Validate step 1
+    if (step === 2 && currentStep === 1) {
+      const title = document.getElementById('eventTitle').value.trim();
+      if (!title) {
+        document.getElementById('eventTitle').style.borderColor = '#FF6B6B';
+        document.getElementById('eventTitle').style.borderStyle = 'dashed';
+        return;
+      }
+    }
+
+    currentStep = step;
+
+    // Update panels
+    document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel' + step).classList.add('active');
+
+    // Update step indicators
+    for (let i = 1; i <= 3; i++) {
+      const ind = document.getElementById('step' + i + 'indicator');
+      ind.classList.remove('active', 'done');
+      if (i < step) ind.classList.add('done');
+      if (i === step) ind.classList.add('active');
+    }
+
+    // Update connectors
+    document.getElementById('conn1').classList.toggle('done', step > 1);
+    document.getElementById('conn2').classList.toggle('done', step > 2);
+
+    // Update status bar
+    document.getElementById('stepDisplay').textContent = step + ' / 3';
+
+    // Populate summary for step 3
+    if (step === 3) {
+      document.getElementById('sumTitle').textContent = document.getElementById('eventTitle').value || '--';
+      document.getElementById('sumDate').textContent = document.getElementById('eventDate').value || '--';
+      document.getElementById('sumDesc').textContent = document.getElementById('eventDesc').value || '--';
+
+      const agendaText = document.getElementById('agendaText').value.trim();
+      if (uploadedFile) {
+        document.getElementById('sumAgenda').textContent = 'File: ' + uploadedFile.name;
+      } else if (agendaText) {
+        document.getElementById('sumAgenda').textContent = agendaText.substring(0, 100) + (agendaText.length > 100 ? '...' : '');
+      } else {
+        document.getElementById('sumAgenda').textContent = 'No agenda provided';
+      }
+    }
+  }
+
+  // File upload handling
+  const uploadZone = document.getElementById('uploadZone');
+  const fileInput = document.getElementById('fileInput');
+
+  uploadZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadZone.classList.add('dragover');
+  });
+
+  uploadZone.addEventListener('dragleave', () => {
+    uploadZone.classList.remove('dragover');
+  });
+
+  uploadZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadZone.classList.remove('dragover');
+    if (e.dataTransfer.files.length) {
+      handleFile(e.dataTransfer.files[0]);
+    }
+  });
+
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files.length) {
+      handleFile(fileInput.files[0]);
+    }
+  });
+
+  function handleFile(file) {
+    uploadedFile = file;
+    document.getElementById('fileName').textContent = file.name;
+    document.getElementById('fileSize').textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB';
+    document.getElementById('filePreview').classList.add('show');
+    uploadZone.classList.add('has-file');
+  }
+
+  function removeFile() {
+    uploadedFile = null;
+    fileInput.value = '';
+    document.getElementById('filePreview').classList.remove('show');
+    uploadZone.classList.remove('has-file');
+  }
+
+  // Generate script animation
+  function startGenerate() {
+    const generateArea = document.getElementById('generateArea');
+    const progressArea = document.getElementById('progressArea');
+    const successArea = document.getElementById('successArea');
+    const step3Buttons = document.getElementById('step3Buttons');
+
+    generateArea.style.display = 'none';
+    step3Buttons.style.display = 'none';
+    progressArea.classList.add('show');
+
+    const stages = [
+      { text: 'Analyzing agenda...', progress: 15, delay: 0 },
+      { text: 'Understanding event structure...', progress: 30, delay: 1200 },
+      { text: 'Identifying speakers & sessions...', progress: 50, delay: 2200 },
+      { text: 'Generating script lines...', progress: 70, delay: 3400 },
+      { text: 'Optimizing tone & transitions...', progress: 90, delay: 4600 },
+      { text: 'Finalizing script...', progress: 100, delay: 5600 },
+    ];
+
+    stages.forEach(stage => {
+      setTimeout(() => {
+        document.getElementById('progressText').innerHTML = stage.text + '<span class="blinking-cursor"></span>';
+        document.getElementById('progressBar').style.width = stage.progress + '%';
+      }, stage.delay);
+    });
+
+    setTimeout(() => {
+      progressArea.classList.remove('show');
+      successArea.classList.add('show');
+    }, 6800);
+  }
+</script>
+
+</body>
+</html>

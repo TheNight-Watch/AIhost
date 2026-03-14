@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI HOST // DASHBOARD</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=DM+Serif+Display&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --mint: #98E4C9;
+    --cream: #FFF8E7;
+    --peach: #FFD4B8;
+    --teal: #2D6A5C;
+    --charcoal: #333;
+    --mint-light: #C8F0E2;
+    --mint-dark: #6BD4AF;
+    --window-bar: #E8E0D0;
+    --font-mono: 'IBM Plex Mono', 'Courier New', monospace;
+    --font-serif: 'DM Serif Display', serif;
+    --radius: 14px;
+  }
+
+  body {
+    font-family: var(--font-mono);
+    background: var(--cream);
+    color: var(--charcoal);
+    min-height: 100vh;
+    padding-bottom: 60px;
+  }
+
+  /* ===== NAVBAR ===== */
+  .navbar {
+    display: flex;
+    align-items: center;
+    background: var(--teal);
+    color: var(--cream);
+    height: 38px;
+    padding: 0 16px;
+    gap: 24px;
+    font-size: 13px;
+    font-weight: 500;
+    border-bottom: 3px solid #1F4F44;
+  }
+
+  .nav-logo {
+    font-family: var(--font-serif);
+    font-size: 20px;
+    letter-spacing: 0.02em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: var(--cream);
+  }
+
+  .nav-logo .pixel-icon {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    background: var(--mint);
+    border-radius: 4px;
+    border: 2px solid var(--cream);
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 4px;
+    flex: 1;
+  }
+
+  .nav-link {
+    color: var(--cream);
+    text-decoration: none;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+
+  .nav-link:hover { background: rgba(255,255,255,0.15); }
+  .nav-link.active { background: var(--mint); color: var(--teal); font-weight: 700; }
+
+  .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 11px;
+  }
+
+  .nav-user {
+    background: var(--peach);
+    color: var(--charcoal);
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .nav-email {
+    font-size: 11px;
+    opacity: 0.8;
+  }
+
+  .nav-logout {
+    font-size: 11px;
+    color: var(--peach);
+    text-decoration: none;
+    border: 1px solid var(--peach);
+    padding: 2px 8px;
+    border-radius: 4px;
+    transition: all 0.2s;
+  }
+
+  .nav-logout:hover {
+    background: var(--peach);
+    color: var(--charcoal);
+  }
+
+  /* ===== PAGE HEADER ===== */
+  .page-header {
+    padding: 28px 40px 20px;
+    max-width: 1300px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .page-title {
+    font-family: var(--font-serif);
+    font-size: 28px;
+    color: var(--teal);
+  }
+
+  .page-subtitle {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #999;
+    margin-top: 4px;
+  }
+
+  /* Create button - 3D key */
+  .btn-create {
+    padding: 12px 24px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    background: var(--mint);
+    color: var(--teal);
+    border: 2px solid var(--charcoal);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    box-shadow: 0 4px 0 var(--teal), 0 6px 0 var(--charcoal);
+    position: relative;
+    top: 0;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-create:hover {
+    background: var(--mint-dark);
+    top: 1px;
+    box-shadow: 0 3px 0 var(--teal), 0 5px 0 var(--charcoal);
+  }
+
+  .btn-create:active {
+    top: 4px;
+    box-shadow: 0 0px 0 var(--teal), 0 1px 0 var(--charcoal);
+  }
+
+  .btn-create .plus {
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  /* ===== EVENTS WINDOW ===== */
+  .events-section {
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 0 40px;
+  }
+
+  .window {
+    border: 2px solid var(--charcoal);
+    border-radius: var(--radius);
+    background: var(--cream);
+    overflow: hidden;
+  }
+
+  .window-bar {
+    background: var(--window-bar);
+    border-bottom: 2px solid var(--charcoal);
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+  }
+
+  .window-dots {
+    display: flex;
+    gap: 6px;
+  }
+
+  .window-dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    border: 1.5px solid var(--charcoal);
+  }
+  .window-dot.red { background: #FF6B6B; }
+  .window-dot.yellow { background: #FFDA6B; }
+  .window-dot.green { background: #6BD4AF; }
+
+  .window-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    flex: 1;
+    text-align: center;
+    color: var(--charcoal);
+  }
+
+  .window-body {
+    padding: 0;
+  }
+
+  /* Pixel divider */
+  .pixel-divider {
+    display: flex;
+    gap: 4px;
+    padding: 6px 16px;
+    background: #FFFDF5;
+    justify-content: center;
+  }
+
+  .pixel-block {
+    width: 6px;
+    height: 6px;
+    border-radius: 2px;
+  }
+
+  /* ===== EVENT GRID ===== */
+  .events-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    padding: 24px;
+  }
+
+  /* Event card - mini window */
+  .event-card {
+    border: 2px solid var(--charcoal);
+    border-radius: var(--radius);
+    background: var(--cream);
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative;
+  }
+
+  .event-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 4px 4px 0 rgba(45, 106, 92, 0.2);
+  }
+
+  .event-card-bar {
+    background: var(--window-bar);
+    border-bottom: 2px solid var(--charcoal);
+    padding: 6px 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 30px;
+  }
+
+  .card-dots {
+    display: flex;
+    gap: 4px;
+  }
+
+  .card-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: 1.5px solid var(--charcoal);
+  }
+  .card-dot.red { background: #FF6B6B; }
+  .card-dot.yellow { background: #FFDA6B; }
+  .card-dot.green { background: #6BD4AF; }
+
+  .card-title-bar {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    flex: 1;
+    text-align: center;
+    color: #999;
+  }
+
+  .event-card-body {
+    padding: 18px 16px;
+  }
+
+  .event-name {
+    font-family: var(--font-serif);
+    font-size: 18px;
+    color: var(--teal);
+    margin-bottom: 8px;
+    line-height: 1.3;
+  }
+
+  .event-date {
+    font-size: 11px;
+    color: #888;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .event-date::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: var(--peach);
+    border-radius: 2px;
+  }
+
+  .event-desc {
+    font-size: 11px;
+    line-height: 1.6;
+    color: #777;
+    margin-bottom: 14px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .event-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 12px;
+    border-top: 2px dashed #ddd;
+  }
+
+  /* Status badges */
+  .status-badge {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1.5px solid;
+  }
+
+  .status-badge.draft {
+    background: var(--peach);
+    border-color: #E8A880;
+    color: #8B5E3C;
+  }
+
+  .status-badge.ready {
+    background: var(--mint);
+    border-color: var(--teal);
+    color: var(--teal);
+  }
+
+  .status-badge.live {
+    background: var(--teal);
+    border-color: var(--charcoal);
+    color: var(--cream);
+  }
+
+  .status-badge.completed {
+    background: #E8E0D0;
+    border-color: #999;
+    color: #666;
+  }
+
+  .script-count {
+    font-size: 10px;
+    color: #999;
+    letter-spacing: 0.05em;
+  }
+
+  /* ===== EMPTY STATE ===== */
+  .empty-state {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 40px;
+    text-align: center;
+  }
+
+  .empty-state.show {
+    display: flex;
+  }
+
+  .floppy-icon {
+    width: 80px;
+    height: 80px;
+    background: var(--mint-light);
+    border: 3px solid var(--teal);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+    position: relative;
+  }
+
+  .floppy-icon::before {
+    content: '';
+    width: 40px;
+    height: 20px;
+    background: var(--teal);
+    border-radius: 0 0 6px 6px;
+    position: absolute;
+    top: 0;
+  }
+
+  .floppy-icon::after {
+    content: '';
+    width: 30px;
+    height: 24px;
+    background: var(--cream);
+    border: 2px solid var(--teal);
+    border-radius: 4px;
+    position: absolute;
+    bottom: 10px;
+  }
+
+  .empty-title {
+    font-family: var(--font-serif);
+    font-size: 22px;
+    color: var(--teal);
+    margin-bottom: 8px;
+  }
+
+  .empty-desc {
+    font-size: 12px;
+    color: #999;
+    margin-bottom: 24px;
+  }
+
+  .btn-empty-create {
+    padding: 12px 28px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    background: var(--mint);
+    color: var(--teal);
+    border: 2px solid var(--charcoal);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    box-shadow: 0 4px 0 var(--teal), 0 6px 0 var(--charcoal);
+    position: relative;
+    top: 0;
+  }
+
+  .btn-empty-create:hover {
+    background: var(--mint-dark);
+    top: 1px;
+    box-shadow: 0 3px 0 var(--teal), 0 5px 0 var(--charcoal);
+  }
+
+  .btn-empty-create:active {
+    top: 4px;
+    box-shadow: 0 0px 0 var(--teal), 0 1px 0 var(--charcoal);
+  }
+
+  /* ===== STATUS BAR ===== */
+  .status-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--teal);
+    color: var(--cream);
+    height: 48px;
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    gap: 32px;
+    z-index: 100;
+    border-top: 3px solid #1F4F44;
+    font-size: 12px;
+  }
+
+  .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .stat-label {
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    opacity: 0.6;
+  }
+
+  .stat-value {
+    font-weight: 700;
+    font-size: 14px;
+  }
+
+  .stat-spacer { flex: 1; }
+
+  .stat-sys {
+    font-size: 10px;
+    opacity: 0.4;
+  }
+
+  /* Create modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(51,51,51,0.5);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-overlay.show {
+    display: flex;
+  }
+
+  .modal-window {
+    width: 100%;
+    max-width: 500px;
+    border: 2px solid var(--charcoal);
+    border-radius: var(--radius);
+    background: var(--cream);
+    overflow: hidden;
+    box-shadow: 8px 8px 0 rgba(45, 106, 92, 0.2);
+  }
+
+  .modal-body {
+    padding: 28px 24px;
+  }
+
+  .modal-body .form-group {
+    margin-bottom: 18px;
+  }
+
+  .form-label {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin-bottom: 8px;
+  }
+
+  .form-input, .form-textarea {
+    width: 100%;
+    padding: 10px 12px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    background: #fff;
+    border: 2px solid var(--charcoal);
+    border-radius: 10px;
+    color: var(--charcoal);
+    outline: none;
+    transition: all 0.2s;
+  }
+
+  .form-input:focus, .form-textarea:focus {
+    border-color: var(--teal);
+    box-shadow: 0 0 0 3px rgba(152, 228, 201, 0.3);
+  }
+
+  .form-textarea {
+    resize: vertical;
+    min-height: 80px;
+    line-height: 1.6;
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+  }
+
+  .btn-modal-cancel {
+    flex: 1;
+    padding: 10px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--window-bar);
+    color: var(--charcoal);
+    border: 2px solid var(--charcoal);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-modal-cancel:hover { background: #ddd; }
+
+  .btn-modal-next {
+    flex: 2;
+    padding: 10px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    background: var(--mint);
+    color: var(--teal);
+    border: 2px solid var(--charcoal);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    box-shadow: 0 3px 0 var(--teal);
+    position: relative;
+    top: 0;
+  }
+
+  .btn-modal-next:hover {
+    top: 1px;
+    box-shadow: 0 2px 0 var(--teal);
+    background: var(--mint-dark);
+  }
+
+  .btn-modal-next:active {
+    top: 3px;
+    box-shadow: 0 0px 0 var(--teal);
+  }
+
+  /* Search/filter bar */
+  .filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 24px;
+    border-bottom: 2px dashed #ddd;
+    background: #FFFDF5;
+  }
+
+  .filter-input {
+    flex: 1;
+    padding: 8px 12px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    background: #fff;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .filter-input:focus { border-color: var(--teal); }
+
+  .filter-btn {
+    padding: 8px 14px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: transparent;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #888;
+    transition: all 0.2s;
+  }
+
+  .filter-btn:hover, .filter-btn.active {
+    border-color: var(--teal);
+    color: var(--teal);
+    background: var(--mint-light);
+  }
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a class="nav-logo" href="./02-dashboard.html">
+    <span class="pixel-icon"></span>
+    AI Host
+  </a>
+  <div class="nav-links">
+    <a class="nav-link active" href="./02-dashboard.html">Dashboard</a>
+    <a class="nav-link" href="#">Help</a>
+  </div>
+  <div class="nav-right">
+    <span class="nav-email">user@example.com</span>
+    <a class="nav-logout" href="./01-login.html">Logout</a>
+    <div class="nav-user">U</div>
+  </div>
+</nav>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div>
+    <div class="page-title">My Events</div>
+    <div class="page-subtitle">Dashboard // Event Management</div>
+  </div>
+  <button class="btn-create" onclick="openCreateModal()">
+    <span class="plus">+</span> Create New Event
+  </button>
+</div>
+
+<!-- EVENTS SECTION -->
+<div class="events-section">
+  <div class="window">
+    <div class="window-bar">
+      <div class="window-dots">
+        <div class="window-dot red"></div>
+        <div class="window-dot yellow"></div>
+        <div class="window-dot green"></div>
+      </div>
+      <div class="window-title">events_list.db</div>
+    </div>
+    <div class="window-body">
+      <!-- Filter bar -->
+      <div class="filter-bar">
+        <input class="filter-input" type="text" placeholder="Search events..." id="searchInput" oninput="filterEvents()">
+        <button class="filter-btn active" data-filter="all" onclick="setFilter('all', this)">All</button>
+        <button class="filter-btn" data-filter="draft" onclick="setFilter('draft', this)">Draft</button>
+        <button class="filter-btn" data-filter="ready" onclick="setFilter('ready', this)">Ready</button>
+        <button class="filter-btn" data-filter="live" onclick="setFilter('live', this)">Live</button>
+        <button class="filter-btn" data-filter="completed" onclick="setFilter('completed', this)">Done</button>
+      </div>
+
+      <!-- Pixel divider -->
+      <div class="pixel-divider" id="pixel-divider"></div>
+
+      <!-- Events grid -->
+      <div class="events-grid" id="eventsGrid">
+
+        <!-- Card 1 -->
+        <div class="event-card" data-status="live" onclick="window.location.href='./05-script-lines.html'">
+          <div class="event-card-bar">
+            <div class="card-dots">
+              <div class="card-dot red"></div>
+              <div class="card-dot yellow"></div>
+              <div class="card-dot green"></div>
+            </div>
+            <div class="card-title-bar">event_001.cfg</div>
+          </div>
+          <div class="event-card-body">
+            <div class="event-name">2024 Annual Tech Summit</div>
+            <div class="event-date">2026-03-20</div>
+            <div class="event-desc">Explore innovations shaping our future. Three keynote sessions, two panel discussions, and networking opportunities.</div>
+            <div class="event-card-footer">
+              <span class="status-badge live">LIVE</span>
+              <span class="script-count">8 lines</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="event-card" data-status="ready" onclick="window.location.href='./05-script-lines.html'">
+          <div class="event-card-bar">
+            <div class="card-dots">
+              <div class="card-dot red"></div>
+              <div class="card-dot yellow"></div>
+              <div class="card-dot green"></div>
+            </div>
+            <div class="card-title-bar">event_002.cfg</div>
+          </div>
+          <div class="event-card-body">
+            <div class="event-name">Product Launch Ceremony</div>
+            <div class="event-date">2026-04-05</div>
+            <div class="event-desc">New product launch event with demo, keynote speech, and press Q&A session.</div>
+            <div class="event-card-footer">
+              <span class="status-badge ready">READY</span>
+              <span class="script-count">6 lines</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="event-card" data-status="draft" onclick="window.location.href='./03-upload.html'">
+          <div class="event-card-bar">
+            <div class="card-dots">
+              <div class="card-dot red"></div>
+              <div class="card-dot yellow"></div>
+              <div class="card-dot green"></div>
+            </div>
+            <div class="card-title-bar">event_003.cfg</div>
+          </div>
+          <div class="event-card-body">
+            <div class="event-name">AI Hackathon 2026</div>
+            <div class="event-date">2026-05-15</div>
+            <div class="event-desc">48-hour hackathon with opening ceremony, team presentations, and awards.</div>
+            <div class="event-card-footer">
+              <span class="status-badge draft">DRAFT</span>
+              <span class="script-count">0 lines</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 4 -->
+        <div class="event-card" data-status="completed" onclick="window.location.href='./05-script-lines.html'">
+          <div class="event-card-bar">
+            <div class="card-dots">
+              <div class="card-dot red"></div>
+              <div class="card-dot yellow"></div>
+              <div class="card-dot green"></div>
+            </div>
+            <div class="card-title-bar">event_004.cfg</div>
+          </div>
+          <div class="event-card-body">
+            <div class="event-name">Annual Gala Dinner</div>
+            <div class="event-date">2026-01-18</div>
+            <div class="event-desc">End-of-year celebration with awards, speeches, performances, and dinner.</div>
+            <div class="event-card-footer">
+              <span class="status-badge completed">COMPLETED</span>
+              <span class="script-count">12 lines</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 5 -->
+        <div class="event-card" data-status="ready" onclick="window.location.href='./05-script-lines.html'">
+          <div class="event-card-bar">
+            <div class="card-dots">
+              <div class="card-dot red"></div>
+              <div class="card-dot yellow"></div>
+              <div class="card-dot green"></div>
+            </div>
+            <div class="card-title-bar">event_005.cfg</div>
+          </div>
+          <div class="event-card-body">
+            <div class="event-name">Developer Conference</div>
+            <div class="event-date">2026-06-10</div>
+            <div class="event-desc">Technical conference with workshops, code demos, and lightning talks.</div>
+            <div class="event-card-footer">
+              <span class="status-badge ready">READY</span>
+              <span class="script-count">10 lines</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 6 -->
+        <div class="event-card" data-status="draft" onclick="window.location.href='./03-upload.html'">
+          <div class="event-card-bar">
+            <div class="card-dots">
+              <div class="card-dot red"></div>
+              <div class="card-dot yellow"></div>
+              <div class="card-dot green"></div>
+            </div>
+            <div class="card-title-bar">event_006.cfg</div>
+          </div>
+          <div class="event-card-body">
+            <div class="event-name">Team Building Workshop</div>
+            <div class="event-date">2026-07-22</div>
+            <div class="event-desc">Team activities, ice-breakers, collaborative challenges and closing ceremony.</div>
+            <div class="event-card-footer">
+              <span class="status-badge draft">DRAFT</span>
+              <span class="script-count">0 lines</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Empty state -->
+      <div class="empty-state" id="emptyState">
+        <div class="floppy-icon"></div>
+        <div class="empty-title">No events yet</div>
+        <div class="empty-desc">Create your first event to get started with AI hosting.</div>
+        <button class="btn-empty-create" onclick="openCreateModal()">+ Create First Event</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Create Modal -->
+<div class="modal-overlay" id="createModal">
+  <div class="modal-window">
+    <div class="window-bar">
+      <div class="window-dots">
+        <div class="window-dot red"></div>
+        <div class="window-dot yellow"></div>
+        <div class="window-dot green"></div>
+      </div>
+      <div class="window-title">new_event // create</div>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Event Title</label>
+        <input class="form-input" type="text" id="newEventTitle" placeholder="e.g. Tech Conference 2026">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Event Date</label>
+        <input class="form-input" type="date" id="newEventDate">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea class="form-textarea" id="newEventDesc" placeholder="Brief description of the event..."></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-modal-cancel" onclick="closeCreateModal()">Cancel</button>
+        <button class="btn-modal-next" onclick="createAndGo()">Next: Upload Agenda</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STATUS BAR -->
+<div class="status-bar">
+  <div class="stat-item">
+    <span class="stat-label">Total Events</span>
+    <span class="stat-value" id="totalCount">06</span>
+  </div>
+  <div class="stat-item">
+    <span class="stat-label">Live</span>
+    <span class="stat-value">01</span>
+  </div>
+  <div class="stat-item">
+    <span class="stat-label">Draft</span>
+    <span class="stat-value">02</span>
+  </div>
+  <div class="stat-spacer"></div>
+  <div class="stat-sys">SYS.HOST.V2 // Dashboard</div>
+</div>
+
+<script>
+  // Pixel divider
+  const divider = document.getElementById('pixel-divider');
+  const colors = ['#98E4C9', '#FFD4B8', '#2D6A5C', '#FFF8E7', '#98E4C9', '#FFD4B8'];
+  for (let i = 0; i < 80; i++) {
+    const block = document.createElement('div');
+    block.className = 'pixel-block';
+    block.style.background = colors[i % colors.length];
+    block.style.opacity = (Math.random() * 0.5 + 0.3).toFixed(2);
+    divider.appendChild(block);
+  }
+
+  let activeFilter = 'all';
+
+  function setFilter(filter, el) {
+    activeFilter = filter;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    filterEvents();
+  }
+
+  function filterEvents() {
+    const query = document.getElementById('searchInput').value.toLowerCase();
+    const cards = document.querySelectorAll('.event-card');
+    let visibleCount = 0;
+
+    cards.forEach(card => {
+      const status = card.dataset.status;
+      const text = card.textContent.toLowerCase();
+      const matchFilter = (activeFilter === 'all') || (status === activeFilter);
+      const matchSearch = !query || text.includes(query);
+
+      if (matchFilter && matchSearch) {
+        card.style.display = '';
+        visibleCount++;
+      } else {
+        card.style.display = 'none';
+      }
+    });
+
+    document.getElementById('emptyState').classList.toggle('show', visibleCount === 0);
+    document.getElementById('eventsGrid').style.display = visibleCount === 0 ? 'none' : '';
+  }
+
+  function openCreateModal() {
+    document.getElementById('createModal').classList.add('show');
+  }
+
+  function closeCreateModal() {
+    document.getElementById('createModal').classList.remove('show');
+  }
+
+  function createAndGo() {
+    const title = document.getElementById('newEventTitle').value.trim();
+    if (!title) {
+      document.getElementById('newEventTitle').style.borderColor = '#FF6B6B';
+      document.getElementById('newEventTitle').style.borderStyle = 'dashed';
+      return;
+    }
+    window.location.href = './03-upload.html';
+  }
+
+  // Close modal on overlay click
+  document.getElementById('createModal').addEventListener('click', function(e) {
+    if (e.target === this) closeCreateModal();
+  });
+</script>
+
+</body>
+</html>

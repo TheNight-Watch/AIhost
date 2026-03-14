@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI HOST // LOGIN</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=DM+Serif+Display&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --mint: #98E4C9;
+    --cream: #FFF8E7;
+    --peach: #FFD4B8;
+    --teal: #2D6A5C;
+    --charcoal: #333;
+    --mint-light: #C8F0E2;
+    --mint-dark: #6BD4AF;
+    --window-bar: #E8E0D0;
+    --font-mono: 'IBM Plex Mono', 'Courier New', monospace;
+    --font-serif: 'DM Serif Display', serif;
+    --radius: 14px;
+    --error: #FF6B6B;
+  }
+
+  body {
+    font-family: var(--font-mono);
+    background: var(--cream);
+    color: var(--charcoal);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Retro grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image:
+      linear-gradient(rgba(45, 106, 92, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(45, 106, 92, 0.06) 1px, transparent 1px);
+    background-size: 32px 32px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Pixel decoration corners */
+  .pixel-corner {
+    position: fixed;
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    width: 60px;
+    z-index: 0;
+  }
+  .pixel-corner.tl { top: 24px; left: 24px; }
+  .pixel-corner.tr { top: 24px; right: 24px; }
+  .pixel-corner.bl { bottom: 24px; left: 24px; }
+  .pixel-corner.br { bottom: 24px; right: 24px; }
+  .pixel-sq {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    opacity: 0.5;
+  }
+
+  .login-container {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 460px;
+    padding: 20px;
+  }
+
+  /* Logo area */
+  .logo-area {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  .logo-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    background: var(--teal);
+    border-radius: 16px;
+    border: 3px solid var(--charcoal);
+    margin-bottom: 16px;
+    position: relative;
+  }
+
+  .logo-icon::before {
+    content: '';
+    width: 24px;
+    height: 24px;
+    background: var(--mint);
+    border-radius: 6px;
+    border: 2px solid var(--cream);
+  }
+
+  .logo-icon::after {
+    content: '';
+    position: absolute;
+    bottom: -3px;
+    right: -3px;
+    width: 16px;
+    height: 16px;
+    background: var(--peach);
+    border-radius: 4px;
+    border: 2px solid var(--charcoal);
+  }
+
+  .logo-title {
+    font-family: var(--font-serif);
+    font-size: 36px;
+    color: var(--teal);
+    letter-spacing: 0.02em;
+  }
+
+  .logo-subtitle {
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #999;
+    margin-top: 4px;
+  }
+
+  /* Window */
+  .window {
+    border: 2px solid var(--charcoal);
+    border-radius: var(--radius);
+    background: var(--cream);
+    overflow: hidden;
+    box-shadow: 6px 6px 0px rgba(45, 106, 92, 0.15);
+  }
+
+  .window-bar {
+    background: var(--window-bar);
+    border-bottom: 2px solid var(--charcoal);
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+  }
+
+  .window-dots {
+    display: flex;
+    gap: 6px;
+  }
+
+  .window-dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    border: 1.5px solid var(--charcoal);
+  }
+  .window-dot.red { background: #FF6B6B; }
+  .window-dot.yellow { background: #FFDA6B; }
+  .window-dot.green { background: #6BD4AF; }
+
+  .window-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    flex: 1;
+    text-align: center;
+    color: var(--charcoal);
+  }
+
+  .window-body {
+    padding: 32px 28px;
+  }
+
+  /* Tab switcher */
+  .tab-switcher {
+    display: flex;
+    border-bottom: 2px dashed #ddd;
+    margin-bottom: 28px;
+  }
+
+  .tab-btn {
+    flex: 1;
+    padding: 12px 16px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border: none;
+    background: transparent;
+    color: #999;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+
+  .tab-btn.active {
+    color: var(--teal);
+  }
+
+  .tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 10%;
+    width: 80%;
+    height: 3px;
+    background: var(--mint);
+    border-radius: 2px;
+  }
+
+  .tab-btn:hover:not(.active) {
+    color: var(--charcoal);
+  }
+
+  /* Form */
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  .form-label {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin-bottom: 8px;
+  }
+
+  .form-input {
+    width: 100%;
+    padding: 12px 14px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    background: #fff;
+    border: 2px solid var(--charcoal);
+    border-radius: 10px;
+    color: var(--charcoal);
+    outline: none;
+    transition: all 0.2s;
+  }
+
+  .form-input:focus {
+    border-color: var(--teal);
+    box-shadow: 0 0 0 3px rgba(152, 228, 201, 0.3);
+  }
+
+  .form-input.error {
+    border-color: var(--error);
+    border-style: dashed;
+  }
+
+  .form-input::placeholder {
+    color: #bbb;
+    font-style: italic;
+  }
+
+  .error-msg {
+    font-size: 11px;
+    color: var(--error);
+    margin-top: 6px;
+    display: none;
+    padding-left: 2px;
+  }
+
+  .error-msg::before {
+    content: '> ';
+    font-weight: 700;
+  }
+
+  .error-msg.visible {
+    display: block;
+  }
+
+  /* Confirm password (hidden by default) */
+  .confirm-group {
+    display: none;
+    margin-bottom: 20px;
+  }
+
+  .confirm-group.show {
+    display: block;
+  }
+
+  /* Name field for register */
+  .name-group {
+    display: none;
+    margin-bottom: 20px;
+  }
+
+  .name-group.show {
+    display: block;
+  }
+
+  /* Submit button - 3D key style */
+  .btn-submit {
+    width: 100%;
+    padding: 14px 24px;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: var(--mint);
+    color: var(--teal);
+    border: 2px solid var(--charcoal);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    box-shadow: 0 4px 0 var(--teal), 0 6px 0 var(--charcoal);
+    position: relative;
+    top: 0;
+    margin-top: 8px;
+  }
+
+  .btn-submit:hover {
+    background: var(--mint-dark);
+    top: 1px;
+    box-shadow: 0 3px 0 var(--teal), 0 5px 0 var(--charcoal);
+  }
+
+  .btn-submit:active {
+    top: 4px;
+    box-shadow: 0 0px 0 var(--teal), 0 1px 0 var(--charcoal);
+  }
+
+  /* Divider */
+  .or-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 24px 0;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: #aaa;
+    text-transform: uppercase;
+  }
+
+  .or-divider::before,
+  .or-divider::after {
+    content: '';
+    flex: 1;
+    border-top: 2px dashed #ddd;
+  }
+
+  /* Link */
+  .switch-link {
+    text-align: center;
+    font-size: 12px;
+    color: #888;
+  }
+
+  .switch-link a {
+    color: var(--teal);
+    font-weight: 600;
+    text-decoration: none;
+    border-bottom: 2px dashed var(--mint);
+    transition: all 0.2s;
+  }
+
+  .switch-link a:hover {
+    color: var(--charcoal);
+    border-bottom-color: var(--teal);
+  }
+
+  /* Status message area */
+  .status-msg {
+    text-align: center;
+    font-size: 11px;
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 16px;
+    display: none;
+  }
+
+  .status-msg.success {
+    display: block;
+    background: var(--mint-light);
+    color: var(--teal);
+    border: 2px solid var(--mint-dark);
+  }
+
+  .status-msg.error {
+    display: block;
+    background: #FFE0E0;
+    color: #CC4444;
+    border: 2px dashed var(--error);
+  }
+
+  /* Pixel divider inside form */
+  .pixel-divider {
+    display: flex;
+    gap: 4px;
+    padding: 6px 0;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+
+  .pixel-block {
+    width: 6px;
+    height: 6px;
+    border-radius: 2px;
+  }
+
+  /* Bottom sys info */
+  .sys-info {
+    text-align: center;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    color: #bbb;
+    text-transform: uppercase;
+    margin-top: 20px;
+  }
+
+  /* Blinking cursor animation */
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  .cursor-blink {
+    display: inline-block;
+    width: 8px;
+    height: 14px;
+    background: var(--teal);
+    margin-left: 4px;
+    vertical-align: middle;
+    animation: blink 1s infinite;
+  }
+
+  /* Loading animation for button */
+  .btn-submit.loading {
+    pointer-events: none;
+    opacity: 0.7;
+  }
+
+  @keyframes dots {
+    0%, 20% { content: '.'; }
+    40% { content: '..'; }
+    60% { content: '...'; }
+    80%, 100% { content: ''; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Pixel decoration corners -->
+<div class="pixel-corner tl" id="px-tl"></div>
+<div class="pixel-corner tr" id="px-tr"></div>
+<div class="pixel-corner bl" id="px-bl"></div>
+<div class="pixel-corner br" id="px-br"></div>
+
+<div class="login-container">
+  <!-- Logo -->
+  <div class="logo-area">
+    <div class="logo-icon"></div>
+    <div class="logo-title">AI Host</div>
+    <div class="logo-subtitle">Intelligent Event Hosting Platform<span class="cursor-blink"></span></div>
+  </div>
+
+  <!-- Window -->
+  <div class="window">
+    <div class="window-bar">
+      <div class="window-dots">
+        <div class="window-dot red"></div>
+        <div class="window-dot yellow"></div>
+        <div class="window-dot green"></div>
+      </div>
+      <div class="window-title" id="window-title">AI_HOST // LOGIN</div>
+    </div>
+    <div class="window-body">
+
+      <!-- Tab switcher -->
+      <div class="tab-switcher">
+        <button class="tab-btn active" data-tab="login" onclick="switchTab('login')">Login</button>
+        <button class="tab-btn" data-tab="register" onclick="switchTab('register')">Register</button>
+      </div>
+
+      <!-- Pixel divider -->
+      <div class="pixel-divider" id="pixel-divider"></div>
+
+      <!-- Form -->
+      <form id="authForm" onsubmit="handleSubmit(event)">
+
+        <!-- Name (register only) -->
+        <div class="form-group name-group" id="nameGroup">
+          <label class="form-label">Name // username</label>
+          <input class="form-input" type="text" id="nameInput" placeholder="your_name_here">
+          <div class="error-msg" id="nameError"></div>
+        </div>
+
+        <!-- Email -->
+        <div class="form-group">
+          <label class="form-label">Email // address</label>
+          <input class="form-input" type="email" id="emailInput" placeholder="user@example.com">
+          <div class="error-msg" id="emailError"></div>
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <label class="form-label">Password // access_key</label>
+          <input class="form-input" type="password" id="passwordInput" placeholder="********">
+          <div class="error-msg" id="passwordError"></div>
+        </div>
+
+        <!-- Confirm Password (register only) -->
+        <div class="form-group confirm-group" id="confirmGroup">
+          <label class="form-label">Confirm // verify_key</label>
+          <input class="form-input" type="password" id="confirmInput" placeholder="********">
+          <div class="error-msg" id="confirmError"></div>
+        </div>
+
+        <button class="btn-submit" type="submit" id="submitBtn">LOGIN</button>
+      </form>
+
+      <div class="or-divider">or</div>
+
+      <div class="switch-link" id="switchLink">
+        <span id="switchText"></span> <a href="#" onclick="toggleMode(event)" id="switchAction"></a>
+      </div>
+
+      <div class="status-msg" id="statusMsg"></div>
+    </div>
+  </div>
+
+  <div class="sys-info">SYS.HOST.V2 // Retro Edition // 2026</div>
+</div>
+
+<script>
+  let mode = 'login'; // 'login' or 'register'
+
+  // Initialize pixel corners
+  function initPixels() {
+    const colors = ['#98E4C9', '#FFD4B8', '#2D6A5C', '#FFF8E7'];
+    ['px-tl','px-tr','px-bl','px-br'].forEach(id => {
+      const el = document.getElementById(id);
+      for (let i = 0; i < 15; i++) {
+        const sq = document.createElement('div');
+        sq.className = 'pixel-sq';
+        sq.style.background = colors[Math.floor(Math.random() * colors.length)];
+        sq.style.opacity = (Math.random() * 0.6 + 0.2).toFixed(2);
+        el.appendChild(sq);
+      }
+    });
+  }
+
+  // Initialize pixel divider
+  function initDivider() {
+    const div = document.getElementById('pixel-divider');
+    const colors = ['#98E4C9', '#FFD4B8', '#2D6A5C', '#FFF8E7', '#98E4C9', '#FFD4B8'];
+    for (let i = 0; i < 40; i++) {
+      const block = document.createElement('div');
+      block.className = 'pixel-block';
+      block.style.background = colors[i % colors.length];
+      block.style.opacity = (Math.random() * 0.5 + 0.3).toFixed(2);
+      div.appendChild(block);
+    }
+  }
+
+  function switchTab(tab) {
+    mode = tab;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+
+    const title = document.getElementById('window-title');
+    const nameGroup = document.getElementById('nameGroup');
+    const confirmGroup = document.getElementById('confirmGroup');
+    const submitBtn = document.getElementById('submitBtn');
+
+    if (tab === 'register') {
+      title.textContent = 'AI_HOST // REGISTER';
+      nameGroup.classList.add('show');
+      confirmGroup.classList.add('show');
+      submitBtn.textContent = 'REGISTER';
+      document.getElementById('switchText').textContent = '';
+      document.getElementById('switchAction').textContent = '';
+    } else {
+      title.textContent = 'AI_HOST // LOGIN';
+      nameGroup.classList.remove('show');
+      confirmGroup.classList.remove('show');
+      submitBtn.textContent = 'LOGIN';
+      document.getElementById('switchText').textContent = '';
+      document.getElementById('switchAction').textContent = '';
+    }
+
+    clearErrors();
+    hideStatus();
+    updateSwitchLink();
+  }
+
+  function toggleMode(e) {
+    e.preventDefault();
+    switchTab(mode === 'login' ? 'register' : 'login');
+  }
+
+  function updateSwitchLink() {
+    const switchText = document.getElementById('switchText');
+    const switchAction = document.getElementById('switchAction');
+    if (mode === 'login') {
+      switchText.textContent = '';
+      switchAction.textContent = '';
+      switchText.textContent = '';
+      switchAction.textContent = '';
+      document.getElementById('switchLink').innerHTML =
+        '<span>Don\'t have an account?</span> <a href="#" onclick="toggleMode(event)">Register</a>';
+    } else {
+      document.getElementById('switchLink').innerHTML =
+        '<span>Already have an account?</span> <a href="#" onclick="toggleMode(event)">Login</a>';
+    }
+  }
+
+  function clearErrors() {
+    document.querySelectorAll('.error-msg').forEach(e => e.classList.remove('visible'));
+    document.querySelectorAll('.form-input').forEach(i => i.classList.remove('error'));
+  }
+
+  function showError(inputId, errorId, msg) {
+    const input = document.getElementById(inputId);
+    const error = document.getElementById(errorId);
+    input.classList.add('error');
+    error.textContent = msg;
+    error.classList.add('visible');
+  }
+
+  function hideStatus() {
+    const s = document.getElementById('statusMsg');
+    s.style.display = 'none';
+    s.className = 'status-msg';
+  }
+
+  function showStatus(msg, type) {
+    const s = document.getElementById('statusMsg');
+    s.textContent = msg;
+    s.className = 'status-msg ' + type;
+    s.style.display = 'block';
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    clearErrors();
+    hideStatus();
+
+    const email = document.getElementById('emailInput').value.trim();
+    const password = document.getElementById('passwordInput').value;
+    let valid = true;
+
+    if (mode === 'register') {
+      const name = document.getElementById('nameInput').value.trim();
+      if (!name) {
+        showError('nameInput', 'nameError', 'ERROR: Username is required');
+        valid = false;
+      }
+    }
+
+    if (!email) {
+      showError('emailInput', 'emailError', 'ERROR: Email is required');
+      valid = false;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      showError('emailInput', 'emailError', 'ERROR: Invalid email format');
+      valid = false;
+    }
+
+    if (!password) {
+      showError('passwordInput', 'passwordError', 'ERROR: Password is required');
+      valid = false;
+    } else if (password.length < 6) {
+      showError('passwordInput', 'passwordError', 'ERROR: Min 6 characters required');
+      valid = false;
+    }
+
+    if (mode === 'register') {
+      const confirm = document.getElementById('confirmInput').value;
+      if (!confirm) {
+        showError('confirmInput', 'confirmError', 'ERROR: Please confirm password');
+        valid = false;
+      } else if (confirm !== password) {
+        showError('confirmInput', 'confirmError', 'ERROR: Passwords do not match');
+        valid = false;
+      }
+    }
+
+    if (!valid) return;
+
+    // Simulate submission
+    const btn = document.getElementById('submitBtn');
+    const origText = btn.textContent;
+    btn.textContent = 'PROCESSING...';
+    btn.classList.add('loading');
+
+    setTimeout(() => {
+      btn.textContent = origText;
+      btn.classList.remove('loading');
+      if (mode === 'login') {
+        showStatus('ACCESS GRANTED. Redirecting to dashboard...', 'success');
+        setTimeout(() => {
+          window.location.href = './02-dashboard.html';
+        }, 1200);
+      } else {
+        showStatus('ACCOUNT CREATED. Redirecting to dashboard...', 'success');
+        setTimeout(() => {
+          window.location.href = './02-dashboard.html';
+        }, 1200);
+      }
+    }, 1500);
+  }
+
+  // Init
+  initPixels();
+  initDivider();
+  updateSwitchLink();
+</script>
+
+</body>
+</html>

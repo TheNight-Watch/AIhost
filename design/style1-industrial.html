@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI HOST // SCRIPT LINES — INDUSTRIAL</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #e4e3dc;
+    --black: #141414;
+    --green: #6b9f74;
+    --orange: #fa6a25;
+    --white: #f5f4ef;
+    --border: 1.5px solid #141414;
+    --font-display: 'Oswald', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --font-mono: 'Space Mono', monospace;
+  }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--black);
+    min-height: 100vh;
+  }
+
+  /* ===== NAVBAR ===== */
+  .navbar {
+    display: grid;
+    grid-template-columns: 200px 1fr auto auto auto;
+    border-bottom: var(--border);
+    height: 52px;
+  }
+
+  .navbar > * {
+    border-right: var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+  }
+
+  .navbar > *:last-child { border-right: none; }
+
+  .nav-logo {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .nav-logo span { color: var(--orange); }
+
+  .nav-links {
+    gap: 24px;
+  }
+
+  .nav-link {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--black);
+    padding: 4px 8px;
+    transition: all 0.15s;
+  }
+
+  .nav-link:hover, .nav-link.active {
+    background: var(--black);
+    color: var(--white);
+  }
+
+  .nav-voice {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    gap: 8px;
+  }
+
+  .voice-indicator {
+    width: 8px;
+    height: 8px;
+    background: var(--green);
+    border-radius: 50%;
+  }
+
+  .nav-lang {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .nav-lang:hover { background: var(--black); color: var(--white); }
+
+  .nav-user {
+    width: 52px;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .nav-user:hover { background: var(--black); color: var(--white); }
+
+  /* ===== ACTION BAR ===== */
+  .action-bar {
+    display: grid;
+    grid-template-columns: auto auto 1fr auto;
+    border-bottom: var(--border);
+    height: 48px;
+  }
+
+  .action-bar > * {
+    border-right: var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+  }
+
+  .action-bar > *:last-child { border-right: none; }
+
+  .btn-generate-all {
+    background: var(--orange);
+    color: var(--black);
+    border: none;
+    padding: 8px 20px;
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-generate-all:hover { background: var(--black); color: var(--orange); }
+
+  .btn-broadcast {
+    background: transparent;
+    color: var(--black);
+    border: none;
+    padding: 8px 16px;
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-broadcast:hover { background: var(--black); color: var(--white); }
+
+  .action-spacer {
+    border-right: none !important;
+  }
+
+  .sys-code {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #888;
+  }
+
+  /* ===== MAIN LAYOUT ===== */
+  .main-layout {
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    min-height: calc(100vh - 52px - 48px - 44px);
+  }
+
+  /* ===== TIMELINE ===== */
+  .timeline {
+    border-right: var(--border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 0;
+  }
+
+  .timeline-node-wrap {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .tl-node {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: var(--border);
+    background: var(--bg);
+    flex-shrink: 0;
+    margin-top: 24px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .tl-node.active { background: var(--orange); border-color: var(--orange); }
+  .tl-node.done { background: var(--green); border-color: var(--green); }
+  .tl-node.playing { background: var(--orange); border-color: var(--orange); animation: tl-blink 1s infinite; }
+
+  @keyframes tl-blink {
+    0%, 100% { box-shadow: 0 0 0 3px rgba(250, 106, 37, 0.3); }
+    50% { box-shadow: 0 0 0 6px rgba(250, 106, 37, 0.15); }
+  }
+
+  .tl-line {
+    width: 1.5px;
+    flex: 1;
+    background: var(--black);
+    margin-top: 4px;
+  }
+
+  /* ===== SCRIPT LIST ===== */
+  .script-list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .script-item {
+    display: grid;
+    grid-template-columns: 180px 1fr 120px;
+    border-bottom: var(--border);
+    min-height: 80px;
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+
+  .script-item:hover {
+    background: var(--black);
+    color: var(--white);
+  }
+
+  .script-item:hover .script-text-area {
+    color: var(--white);
+    border-color: #555;
+  }
+
+  .script-item:hover .item-label { color: #aaa; }
+  .script-item:hover .item-section { color: var(--white); }
+
+  .script-item.selected {
+    background: var(--black);
+    color: var(--white);
+  }
+
+  .script-item.selected .script-text-area {
+    color: var(--white);
+    border-color: #555;
+  }
+
+  .script-item.selected .item-label { color: #aaa; }
+
+  .script-item.playing {
+    background: var(--orange);
+    color: var(--black);
+  }
+
+  .script-item.playing .item-label { color: #333; }
+
+  .script-item.playing .script-text-area {
+    color: var(--black);
+    border-color: rgba(0,0,0,0.2);
+  }
+
+  .script-item > * {
+    padding: 14px 16px;
+  }
+
+  .item-left {
+    border-right: var(--border);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .script-item:hover .item-left,
+  .script-item.selected .item-left { border-right-color: #555; }
+  .script-item.playing .item-left { border-right-color: rgba(0,0,0,0.2); }
+
+  .item-section {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    line-height: 1.1;
+  }
+
+  .item-label {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #888;
+  }
+
+  .item-center {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .script-text-area {
+    font-family: var(--font-body);
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--black);
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid #ccc;
+    padding: 4px 0;
+    outline: none;
+    resize: none;
+    width: 100%;
+    min-height: 40px;
+  }
+
+  .script-text-area:focus {
+    border-bottom-color: var(--orange);
+  }
+
+  .audio-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .audio-play {
+    width: 22px;
+    height: 22px;
+    border: var(--border);
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    transition: all 0.12s;
+    flex-shrink: 0;
+  }
+
+  .audio-play:hover { background: var(--black); color: var(--white); }
+  .script-item.playing .audio-play { border-color: var(--black); }
+
+  .waveform-mini {
+    flex: 1;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    gap: 1.5px;
+  }
+
+  .wf-bar {
+    width: 2px;
+    background: var(--black);
+    border-radius: 1px;
+    opacity: 0.3;
+  }
+
+  .wf-bar.active { opacity: 0.8; }
+  .script-item:hover .wf-bar { background: var(--white); }
+  .script-item.selected .wf-bar { background: var(--white); }
+  .script-item.playing .wf-bar { background: var(--black); }
+
+  .audio-time {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    flex-shrink: 0;
+  }
+
+  .item-right {
+    border-left: var(--border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .script-item:hover .item-right,
+  .script-item.selected .item-right { border-left-color: #555; }
+  .script-item.playing .item-right { border-left-color: rgba(0,0,0,0.2); }
+
+  .btn-gen {
+    background: var(--orange);
+    color: var(--black);
+    border: none;
+    padding: 6px 14px;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    font-weight: 700;
+    transition: all 0.15s;
+  }
+
+  .btn-gen:hover { background: var(--black); color: var(--orange); }
+
+  .btn-gen.done {
+    background: var(--green);
+    color: var(--black);
+  }
+
+  .btn-gen.done:hover { background: var(--black); color: var(--green); }
+
+  .item-status {
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #999;
+  }
+
+  .script-item:hover .item-status { color: #777; }
+  .script-item.playing .item-status { color: #333; }
+
+  /* ===== STATUS BAR ===== */
+  .status-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--green);
+    border-top: var(--border);
+    height: 44px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr) auto;
+    z-index: 100;
+  }
+
+  .status-bar > * {
+    border-right: var(--border);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0 16px;
+  }
+
+  .status-bar > *:last-child { border-right: none; }
+
+  .stat-label {
+    font-family: var(--font-mono);
+    font-size: 0.5rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(0,0,0,0.5);
+    line-height: 1;
+  }
+
+  .stat-value {
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .stat-sys {
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(0,0,0,0.4);
+    justify-content: center;
+    align-items: center;
+  }
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="nav-logo">AI<span>HOST</span></div>
+  <div class="nav-links">
+    <a class="nav-link" href="#">PROJECTS</a>
+    <a class="nav-link active" href="#">SCRIPT</a>
+    <a class="nav-link" href="#">VOICES</a>
+    <a class="nav-link" href="#">SETTINGS</a>
+  </div>
+  <div class="nav-voice">
+    <span class="voice-indicator"></span>
+    YUNXI / MALE
+  </div>
+  <div class="nav-lang">EN / ZH</div>
+  <div class="nav-user">LH</div>
+</nav>
+
+<!-- ACTION BAR -->
+<div class="action-bar">
+  <div><button class="btn-generate-all">&#9654; GENERATE ALL AUDIO</button></div>
+  <div><button class="btn-broadcast">&#9673; AUTO BROADCAST</button></div>
+  <div class="action-spacer"></div>
+  <div><span class="sys-code">SYS. VER 2.0 // 2024 ANNUAL TECH SUMMIT</span></div>
+</div>
+
+<!-- MAIN LAYOUT -->
+<div class="main-layout">
+
+  <!-- TIMELINE -->
+  <div class="timeline" id="timeline"></div>
+
+  <!-- SCRIPT LIST -->
+  <div class="script-list">
+
+    <div class="script-item selected" data-node="done">
+      <div class="item-left">
+        <div class="item-section">Opening</div>
+        <div class="item-label">SEC. 01 // 00:00</div>
+      </div>
+      <div class="item-center">
+        <textarea class="script-text-area" rows="2">Welcome to the 2024 Annual Tech Summit! I'm your AI host. Over the next few hours, we will explore innovations shaping our future together.</textarea>
+        <div class="audio-bar">
+          <button class="audio-play">&#9654;</button>
+          <div class="waveform-mini" data-wf="1"></div>
+          <span class="audio-time">0:12</span>
+        </div>
+      </div>
+      <div class="item-right">
+        <button class="btn-gen done">DONE</button>
+        <span class="item-status">12 SEC</span>
+      </div>
+    </div>
+
+    <div class="script-item" data-node="done">
+      <div class="item-left">
+        <div class="item-section">Agenda<br>Overview</div>
+        <div class="item-label">SEC. 02 // 00:12</div>
+      </div>
+      <div class="item-center">
+        <textarea class="script-text-area" rows="2">Let me walk you through today's agenda. Three keynote sessions, two panel discussions, and a networking break. Each session designed for actionable insights.</textarea>
+        <div class="audio-bar">
+          <button class="audio-play">&#9654;</button>
+          <div class="waveform-mini" data-wf="2"></div>
+          <span class="audio-time">0:15</span>
+        </div>
+      </div>
+      <div class="item-right">
+        <button class="btn-gen done">DONE</button>
+        <span class="item-status">15 SEC</span>
+      </div>
+    </div>
+
+    <div class="script-item playing" data-node="playing">
+      <div class="item-left">
+        <div class="item-section">Guest<br>Dr. Sarah Chen</div>
+        <div class="item-label">SEC. 03 // 00:27</div>
+      </div>
+      <div class="item-center">
+        <textarea class="script-text-area" rows="2">It's my great pleasure to introduce our first keynote speaker, Dr. Sarah Chen, Chief AI Officer at TechVision Labs, a pioneer in responsible AI development.</textarea>
+        <div class="audio-bar">
+          <button class="audio-play">&#9646;&#9646;</button>
+          <div class="waveform-mini" data-wf="3"></div>
+          <span class="audio-time">0:18</span>
+        </div>
+      </div>
+      <div class="item-right">
+        <button class="btn-gen done">DONE</button>
+        <span class="item-status">PLAYING</span>
+      </div>
+    </div>
+
+    <div class="script-item" data-node="default">
+      <div class="item-left">
+        <div class="item-section">Transition</div>
+        <div class="item-label">SEC. 04 // 00:45</div>
+      </div>
+      <div class="item-center">
+        <textarea class="script-text-area" rows="2">Thank you, Dr. Chen. Before we move on, let's take a quick five-minute break. Help yourselves to refreshments in the lobby.</textarea>
+      </div>
+      <div class="item-right">
+        <button class="btn-gen">GENERATE</button>
+        <span class="item-status">PENDING</span>
+      </div>
+    </div>
+
+    <div class="script-item" data-node="default">
+      <div class="item-left">
+        <div class="item-section">Guest<br>Mark Johnson</div>
+        <div class="item-label">SEC. 05 // 00:50</div>
+      </div>
+      <div class="item-center">
+        <textarea class="script-text-area" rows="2">Welcome back. Our second speaker is Mark Johnson, VP of Product at CloudScale. He will share enterprise AI-powered workflow integration strategies.</textarea>
+      </div>
+      <div class="item-right">
+        <button class="btn-gen">GENERATE</button>
+        <span class="item-status">PENDING</span>
+      </div>
+    </div>
+
+    <div class="script-item" data-node="default">
+      <div class="item-left">
+        <div class="item-section">Panel<br>Discussion</div>
+        <div class="item-label">SEC. 06 // 01:05</div>
+      </div>
+      <div class="item-center">
+        <textarea class="script-text-area" rows="2">Let's move into our panel discussion on "The Future of Human-AI Collaboration." Panelists, please join me on stage. Audience Q&A in twenty minutes.</textarea>
+      </div>
+      <div class="item-right">
+        <button class="btn-gen">GENERATE</button>
+        <span class="item-status">PENDING</span>
+      </div>
+    </div>
+
+    <div class="script-item" data-node="default">
+      <div class="item-left">
+        <div class="item-section">Q&A<br>Session</div>
+        <div class="item-label">SEC. 07 // 01:25</div>
+      </div>
+      <div class="item-center">
+        <textarea class="script-text-area" rows="2">We're opening the floor for questions. Please raise your hand, our staff will bring a microphone. Time for five to six questions.</textarea>
+      </div>
+      <div class="item-right">
+        <button class="btn-gen">GENERATE</button>
+        <span class="item-status">PENDING</span>
+      </div>
+    </div>
+
+    <div class="script-item" data-node="default">
+      <div class="item-left">
+        <div class="item-section">Closing<br>Remarks</div>
+        <div class="item-label">SEC. 08 // 01:35</div>
+      </div>
+      <div class="item-center">
+        <textarea class="script-text-area" rows="2">That brings us to the end of the 2024 Annual Tech Summit. Thank you all. We hope today sparked new ideas. See you next year!</textarea>
+      </div>
+      <div class="item-right">
+        <button class="btn-gen">GENERATE</button>
+        <span class="item-status">PENDING</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- STATUS BAR -->
+<div class="status-bar">
+  <div>
+    <span class="stat-label">TOTAL LINES</span>
+    <span class="stat-value">08</span>
+  </div>
+  <div>
+    <span class="stat-label">GENERATED</span>
+    <span class="stat-value">03 / 08</span>
+  </div>
+  <div>
+    <span class="stat-label">PROGRESS</span>
+    <span class="stat-value">37.5%</span>
+  </div>
+  <div>
+    <span class="stat-label">EST. DURATION</span>
+    <span class="stat-value">~4:30</span>
+  </div>
+  <div class="stat-sys">SYS.HOST.V2</div>
+</div>
+
+<script>
+// Build timeline nodes
+const items = document.querySelectorAll('.script-item');
+const timeline = document.getElementById('timeline');
+
+items.forEach((item, i) => {
+  const type = item.dataset.node;
+  const wrap = document.createElement('div');
+  wrap.className = 'timeline-node-wrap';
+
+  const node = document.createElement('div');
+  node.className = 'tl-node' + (type === 'done' ? ' done' : type === 'playing' ? ' playing' : '');
+  wrap.appendChild(node);
+
+  if (i < items.length - 1) {
+    const line = document.createElement('div');
+    line.className = 'tl-line';
+    wrap.appendChild(line);
+  }
+
+  timeline.appendChild(wrap);
+});
+
+// Waveforms
+document.querySelectorAll('.waveform-mini').forEach(wf => {
+  for (let i = 0; i < 50; i++) {
+    const bar = document.createElement('div');
+    bar.className = 'wf-bar' + (i < 20 ? ' active' : '');
+    bar.style.height = (Math.random() * 14 + 4) + 'px';
+    wf.appendChild(bar);
+  }
+});
+
+// Click to select
+items.forEach(item => {
+  item.addEventListener('click', function(e) {
+    if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'BUTTON') return;
+    items.forEach(i => { if (!i.classList.contains('playing')) i.classList.remove('selected'); });
+    if (!this.classList.contains('playing')) this.classList.add('selected');
+  });
+});
+</script>
+
+</body>
+</html>

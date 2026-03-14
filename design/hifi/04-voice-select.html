@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI HOST // VOICE SELECT</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=DM+Serif+Display&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --mint: #98E4C9;
+    --cream: #FFF8E7;
+    --peach: #FFD4B8;
+    --teal: #2D6A5C;
+    --charcoal: #333;
+    --mint-light: #C8F0E2;
+    --mint-dark: #6BD4AF;
+    --window-bar: #E8E0D0;
+    --font-mono: 'IBM Plex Mono', 'Courier New', monospace;
+    --font-serif: 'DM Serif Display', serif;
+    --radius: 14px;
+  }
+
+  body {
+    font-family: var(--font-mono);
+    background: var(--cream);
+    color: var(--charcoal);
+    min-height: 100vh;
+    padding-bottom: 100px;
+  }
+
+  /* ===== NAVBAR ===== */
+  .navbar {
+    display: flex;
+    align-items: center;
+    background: var(--teal);
+    color: var(--cream);
+    height: 38px;
+    padding: 0 16px;
+    gap: 24px;
+    font-size: 13px;
+    font-weight: 500;
+    border-bottom: 3px solid #1F4F44;
+  }
+
+  .nav-logo {
+    font-family: var(--font-serif);
+    font-size: 20px;
+    letter-spacing: 0.02em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: var(--cream);
+  }
+
+  .nav-logo .pixel-icon {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    background: var(--mint);
+    border-radius: 4px;
+    border: 2px solid var(--cream);
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 4px;
+    flex: 1;
+  }
+
+  .nav-link {
+    color: var(--cream);
+    text-decoration: none;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+
+  .nav-link:hover { background: rgba(255,255,255,0.15); }
+  .nav-link.active { background: var(--mint); color: var(--teal); font-weight: 700; }
+
+  .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 11px;
+  }
+
+  .nav-user {
+    background: var(--peach);
+    color: var(--charcoal);
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  /* ===== EVENT BAR ===== */
+  .event-bar {
+    background: var(--mint-light);
+    border-bottom: 2px dashed var(--mint-dark);
+    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+  }
+
+  .event-title {
+    font-family: var(--font-serif);
+    font-size: 16px;
+    color: var(--teal);
+  }
+
+  .event-meta {
+    color: var(--teal);
+    opacity: 0.7;
+  }
+
+  /* ===== PAGE HEADER ===== */
+  .page-header {
+    padding: 24px 40px 16px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .page-title {
+    font-family: var(--font-serif);
+    font-size: 26px;
+    color: var(--teal);
+  }
+
+  .page-subtitle {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #999;
+    margin-top: 4px;
+  }
+
+  /* ===== FILTER TABS ===== */
+  .filter-tabs {
+    display: flex;
+    gap: 8px;
+    padding: 0 40px;
+    max-width: 1200px;
+    margin: 0 auto 20px;
+    flex-wrap: wrap;
+  }
+
+  .filter-tab {
+    padding: 8px 16px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    background: transparent;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #888;
+    transition: all 0.2s;
+  }
+
+  .filter-tab:hover {
+    border-color: var(--teal);
+    color: var(--teal);
+  }
+
+  .filter-tab.active {
+    background: var(--teal);
+    border-color: var(--charcoal);
+    color: var(--cream);
+  }
+
+  /* ===== VOICE GRID ===== */
+  .voice-section {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 40px;
+  }
+
+  .window {
+    border: 2px solid var(--charcoal);
+    border-radius: var(--radius);
+    background: var(--cream);
+    overflow: hidden;
+  }
+
+  .window-bar {
+    background: var(--window-bar);
+    border-bottom: 2px solid var(--charcoal);
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+  }
+
+  .window-dots {
+    display: flex;
+    gap: 6px;
+  }
+
+  .window-dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    border: 1.5px solid var(--charcoal);
+  }
+  .window-dot.red { background: #FF6B6B; }
+  .window-dot.yellow { background: #FFDA6B; }
+  .window-dot.green { background: #6BD4AF; }
+
+  .window-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    flex: 1;
+    text-align: center;
+    color: var(--charcoal);
+  }
+
+  .window-body {
+    padding: 0;
+  }
+
+  /* Pixel divider */
+  .pixel-divider {
+    display: flex;
+    gap: 4px;
+    padding: 6px 16px;
+    background: #FFFDF5;
+    justify-content: center;
+  }
+
+  .pixel-block {
+    width: 6px;
+    height: 6px;
+    border-radius: 2px;
+  }
+
+  /* Voice grid */
+  .voice-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    padding: 20px;
+  }
+
+  /* Voice card */
+  .voice-card {
+    border: 2px solid var(--charcoal);
+    border-radius: 12px;
+    background: #FFFDF5;
+    overflow: hidden;
+    transition: all 0.25s;
+    position: relative;
+  }
+
+  .voice-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 3px 3px 0 rgba(45, 106, 92, 0.15);
+  }
+
+  .voice-card.selected {
+    border-color: var(--teal);
+    border-width: 3px;
+    background: var(--mint-light);
+    box-shadow: 0 0 0 3px rgba(152, 228, 201, 0.4);
+  }
+
+  .voice-card-header {
+    padding: 16px 14px 12px;
+    text-align: center;
+    border-bottom: 2px dashed #ddd;
+  }
+
+  .voice-card.selected .voice-card-header {
+    border-bottom-color: var(--mint-dark);
+  }
+
+  .speaker-icon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 10px;
+    border-radius: 12px;
+    border: 2px solid var(--charcoal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+
+  .speaker-icon.female {
+    background: var(--peach);
+  }
+
+  .speaker-icon.male {
+    background: var(--mint);
+  }
+
+  .voice-name {
+    font-family: var(--font-serif);
+    font-size: 17px;
+    color: var(--teal);
+    margin-bottom: 4px;
+  }
+
+  .voice-desc {
+    font-size: 10px;
+    color: #888;
+    line-height: 1.4;
+  }
+
+  .voice-tags {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+
+  .voice-tag {
+    font-size: 9px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: rgba(45, 106, 92, 0.1);
+    color: var(--teal);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+  }
+
+  .voice-card-actions {
+    padding: 12px 14px;
+    display: flex;
+    gap: 8px;
+  }
+
+  .btn-preview {
+    flex: 1;
+    padding: 8px 12px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    background: var(--window-bar);
+    color: var(--charcoal);
+    border: 2px solid var(--charcoal);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-preview:hover {
+    background: var(--peach);
+  }
+
+  .btn-preview.playing {
+    background: var(--peach);
+    animation: pulse-preview 1s infinite;
+  }
+
+  @keyframes pulse-preview {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+
+  .btn-select {
+    flex: 1;
+    padding: 8px 12px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    background: var(--mint);
+    color: var(--teal);
+    border: 2px solid var(--teal);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-select:hover {
+    background: var(--teal);
+    color: var(--cream);
+  }
+
+  .voice-card.selected .btn-select {
+    background: var(--teal);
+    color: var(--cream);
+  }
+
+  /* Selected badge */
+  .selected-badge {
+    display: none;
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: var(--teal);
+    color: var(--cream);
+    font-size: 9px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+    letter-spacing: 0.06em;
+  }
+
+  .voice-card.selected .selected-badge {
+    display: block;
+  }
+
+  /* Waveform animation for preview */
+  .preview-waveform {
+    display: none;
+    height: 20px;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    margin-top: 8px;
+  }
+
+  .preview-waveform.show {
+    display: flex;
+  }
+
+  .wf-bar {
+    width: 3px;
+    border-radius: 2px;
+    background: var(--teal);
+  }
+
+  @keyframes wave {
+    0%, 100% { height: 4px; }
+    50% { height: 16px; }
+  }
+
+  .preview-waveform.playing .wf-bar {
+    animation: wave 0.8s ease-in-out infinite;
+  }
+
+  /* ===== BOTTOM ACTION BAR ===== */
+  .action-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--teal);
+    color: var(--cream);
+    height: 64px;
+    display: flex;
+    align-items: center;
+    padding: 0 40px;
+    gap: 20px;
+    z-index: 100;
+    border-top: 3px solid #1F4F44;
+  }
+
+  .action-selected-info {
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .action-selected-label {
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    opacity: 0.6;
+  }
+
+  .action-selected-name {
+    font-family: var(--font-serif);
+    font-size: 18px;
+  }
+
+  .action-spacer { flex: 1; }
+
+  .btn-continue {
+    padding: 12px 28px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    background: var(--mint);
+    color: var(--teal);
+    border: 2px solid var(--cream);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    box-shadow: 0 3px 0 #1F4F44;
+    position: relative;
+    top: 0;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  .btn-continue.enabled {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .btn-continue:hover {
+    background: var(--mint-dark);
+    top: 1px;
+    box-shadow: 0 2px 0 #1F4F44;
+  }
+
+  .action-sys {
+    font-size: 10px;
+    opacity: 0.3;
+  }
+
+  /* Test text input */
+  .test-text-area {
+    padding: 14px 20px;
+    background: #FFFDF5;
+    border-bottom: 2px dashed #ddd;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .test-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--teal);
+    white-space: nowrap;
+  }
+
+  .test-input {
+    flex: 1;
+    padding: 8px 12px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    background: #fff;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .test-input:focus { border-color: var(--teal); }
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a class="nav-logo" href="./02-dashboard.html">
+    <span class="pixel-icon"></span>
+    AI Host
+  </a>
+  <div class="nav-links">
+    <a class="nav-link" href="./02-dashboard.html">Dashboard</a>
+    <a class="nav-link active" href="#">Voices</a>
+    <a class="nav-link" href="#">Help</a>
+  </div>
+  <div class="nav-right">
+    <span style="font-size:11px; opacity:0.8;">user@example.com</span>
+    <div class="nav-user">U</div>
+  </div>
+</nav>
+
+<!-- EVENT BAR -->
+<div class="event-bar">
+  <div class="event-title">2024 Annual Tech Summit</div>
+  <div class="event-meta">Voice Selection // Step 2 of 3</div>
+</div>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div class="page-title">Select Voice</div>
+  <div class="page-subtitle">SELECT_VOICE // AI HOST</div>
+</div>
+
+<!-- FILTER TABS -->
+<div class="filter-tabs">
+  <button class="filter-tab active" data-filter="all" onclick="filterVoices('all', this)">All Voices</button>
+  <button class="filter-tab" data-filter="female" onclick="filterVoices('female', this)">Female</button>
+  <button class="filter-tab" data-filter="male" onclick="filterVoices('male', this)">Male</button>
+  <button class="filter-tab" data-filter="warm" onclick="filterVoices('warm', this)">Warm</button>
+  <button class="filter-tab" data-filter="energetic" onclick="filterVoices('energetic', this)">Energetic</button>
+  <button class="filter-tab" data-filter="professional" onclick="filterVoices('professional', this)">Professional</button>
+</div>
+
+<!-- VOICE GRID -->
+<div class="voice-section">
+  <div class="window">
+    <div class="window-bar">
+      <div class="window-dots">
+        <div class="window-dot red"></div>
+        <div class="window-dot yellow"></div>
+        <div class="window-dot green"></div>
+      </div>
+      <div class="window-title">voice_library.db</div>
+    </div>
+    <div class="window-body">
+      <!-- Test text -->
+      <div class="test-text-area">
+        <span class="test-label">Test Text:</span>
+        <input class="test-input" type="text" id="testText" value="Welcome to today's event! I'm your AI host." placeholder="Type test text for voice preview...">
+      </div>
+
+      <!-- Pixel divider -->
+      <div class="pixel-divider" id="pixel-divider"></div>
+
+      <!-- Voice grid -->
+      <div class="voice-grid" id="voiceGrid">
+
+        <!-- Voice 1 -->
+        <div class="voice-card" data-gender="female" data-style="warm" data-id="1">
+          <div class="selected-badge">SELECTED</div>
+          <div class="voice-card-header">
+            <div class="speaker-icon female">&#9792;</div>
+            <div class="voice-name">Gentle Female</div>
+            <div class="voice-desc">Warm and soothing, ideal for formal events</div>
+            <div class="voice-tags">
+              <span class="voice-tag">Female</span>
+              <span class="voice-tag">Warm</span>
+              <span class="voice-tag">Elegant</span>
+            </div>
+            <div class="preview-waveform" id="wf-1"></div>
+          </div>
+          <div class="voice-card-actions">
+            <button class="btn-preview" onclick="previewVoice(1, event)">Preview</button>
+            <button class="btn-select" onclick="selectVoice(1, 'Gentle Female')">Select</button>
+          </div>
+        </div>
+
+        <!-- Voice 2 -->
+        <div class="voice-card" data-gender="male" data-style="professional" data-id="2">
+          <div class="selected-badge">SELECTED</div>
+          <div class="voice-card-header">
+            <div class="speaker-icon male">&#9794;</div>
+            <div class="voice-name">Resonant Male</div>
+            <div class="voice-desc">Deep magnetic male voice, authoritative</div>
+            <div class="voice-tags">
+              <span class="voice-tag">Male</span>
+              <span class="voice-tag">Professional</span>
+              <span class="voice-tag">Deep</span>
+            </div>
+            <div class="preview-waveform" id="wf-2"></div>
+          </div>
+          <div class="voice-card-actions">
+            <button class="btn-preview" onclick="previewVoice(2, event)">Preview</button>
+            <button class="btn-select" onclick="selectVoice(2, 'Resonant Male')">Select</button>
+          </div>
+        </div>
+
+        <!-- Voice 3 -->
+        <div class="voice-card" data-gender="female" data-style="energetic" data-id="3">
+          <div class="selected-badge">SELECTED</div>
+          <div class="voice-card-header">
+            <div class="speaker-icon female">&#9792;</div>
+            <div class="voice-name">Sunny Girl</div>
+            <div class="voice-desc">Youthful and energetic, great for tech events</div>
+            <div class="voice-tags">
+              <span class="voice-tag">Female</span>
+              <span class="voice-tag">Energetic</span>
+              <span class="voice-tag">Youth</span>
+            </div>
+            <div class="preview-waveform" id="wf-3"></div>
+          </div>
+          <div class="voice-card-actions">
+            <button class="btn-preview" onclick="previewVoice(3, event)">Preview</button>
+            <button class="btn-select" onclick="selectVoice(3, 'Sunny Girl')">Select</button>
+          </div>
+        </div>
+
+        <!-- Voice 4 -->
+        <div class="voice-card" data-gender="male" data-style="warm" data-id="4">
+          <div class="selected-badge">SELECTED</div>
+          <div class="voice-card-header">
+            <div class="speaker-icon male">&#9794;</div>
+            <div class="voice-name">Gentle Scholar</div>
+            <div class="voice-desc">Warm and refined, storytelling style</div>
+            <div class="voice-tags">
+              <span class="voice-tag">Male</span>
+              <span class="voice-tag">Warm</span>
+              <span class="voice-tag">Narrator</span>
+            </div>
+            <div class="preview-waveform" id="wf-4"></div>
+          </div>
+          <div class="voice-card-actions">
+            <button class="btn-preview" onclick="previewVoice(4, event)">Preview</button>
+            <button class="btn-select" onclick="selectVoice(4, 'Gentle Scholar')">Select</button>
+          </div>
+        </div>
+
+        <!-- Voice 5 -->
+        <div class="voice-card" data-gender="female" data-style="professional" data-id="5">
+          <div class="selected-badge">SELECTED</div>
+          <div class="voice-card-header">
+            <div class="speaker-icon female">&#9792;</div>
+            <div class="voice-name">News Anchor</div>
+            <div class="voice-desc">Professional broadcast-quality female voice</div>
+            <div class="voice-tags">
+              <span class="voice-tag">Female</span>
+              <span class="voice-tag">Professional</span>
+              <span class="voice-tag">News</span>
+            </div>
+            <div class="preview-waveform" id="wf-5"></div>
+          </div>
+          <div class="voice-card-actions">
+            <button class="btn-preview" onclick="previewVoice(5, event)">Preview</button>
+            <button class="btn-select" onclick="selectVoice(5, 'News Anchor')">Select</button>
+          </div>
+        </div>
+
+        <!-- Voice 6 -->
+        <div class="voice-card" data-gender="male" data-style="energetic" data-id="6">
+          <div class="selected-badge">SELECTED</div>
+          <div class="voice-card-header">
+            <div class="speaker-icon male">&#9794;</div>
+            <div class="voice-name">Dynamic Host</div>
+            <div class="voice-desc">Energetic and passionate, event MC style</div>
+            <div class="voice-tags">
+              <span class="voice-tag">Male</span>
+              <span class="voice-tag">Energetic</span>
+              <span class="voice-tag">MC</span>
+            </div>
+            <div class="preview-waveform" id="wf-6"></div>
+          </div>
+          <div class="voice-card-actions">
+            <button class="btn-preview" onclick="previewVoice(6, event)">Preview</button>
+            <button class="btn-select" onclick="selectVoice(6, 'Dynamic Host')">Select</button>
+          </div>
+        </div>
+
+        <!-- Voice 7 -->
+        <div class="voice-card" data-gender="female" data-style="warm" data-id="7">
+          <div class="selected-badge">SELECTED</div>
+          <div class="voice-card-header">
+            <div class="speaker-icon female">&#9792;</div>
+            <div class="voice-name">Sweet Voice</div>
+            <div class="voice-desc">Sweet and gentle, suitable for lifestyle events</div>
+            <div class="voice-tags">
+              <span class="voice-tag">Female</span>
+              <span class="voice-tag">Warm</span>
+              <span class="voice-tag">Sweet</span>
+            </div>
+            <div class="preview-waveform" id="wf-7"></div>
+          </div>
+          <div class="voice-card-actions">
+            <button class="btn-preview" onclick="previewVoice(7, event)">Preview</button>
+            <button class="btn-select" onclick="selectVoice(7, 'Sweet Voice')">Select</button>
+          </div>
+        </div>
+
+        <!-- Voice 8 -->
+        <div class="voice-card" data-gender="male" data-style="professional" data-id="8">
+          <div class="selected-badge">SELECTED</div>
+          <div class="voice-card-header">
+            <div class="speaker-icon male">&#9794;</div>
+            <div class="voice-name">Wise Elder</div>
+            <div class="voice-desc">Mature and steady, suitable for academic events</div>
+            <div class="voice-tags">
+              <span class="voice-tag">Male</span>
+              <span class="voice-tag">Professional</span>
+              <span class="voice-tag">Steady</span>
+            </div>
+            <div class="preview-waveform" id="wf-8"></div>
+          </div>
+          <div class="voice-card-actions">
+            <button class="btn-preview" onclick="previewVoice(8, event)">Preview</button>
+            <button class="btn-select" onclick="selectVoice(8, 'Wise Elder')">Select</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM ACTION BAR -->
+<div class="action-bar">
+  <div class="action-selected-info">
+    <div>
+      <div class="action-selected-label">Selected Voice</div>
+      <div class="action-selected-name" id="selectedVoiceName">-- None --</div>
+    </div>
+  </div>
+  <div class="action-spacer"></div>
+  <span class="action-sys">SYS.HOST.V2 // Voice Select</span>
+  <a class="btn-continue" id="continueBtn" href="./05-script-lines.html">Continue to Script</a>
+</div>
+
+<script>
+  let selectedVoiceId = null;
+  let playingVoiceId = null;
+  let playTimeout = null;
+
+  // Init pixel divider
+  const divider = document.getElementById('pixel-divider');
+  const colors = ['#98E4C9', '#FFD4B8', '#2D6A5C', '#FFF8E7', '#98E4C9', '#FFD4B8'];
+  for (let i = 0; i < 80; i++) {
+    const block = document.createElement('div');
+    block.className = 'pixel-block';
+    block.style.background = colors[i % colors.length];
+    block.style.opacity = (Math.random() * 0.5 + 0.3).toFixed(2);
+    divider.appendChild(block);
+  }
+
+  // Init waveforms for each voice
+  for (let id = 1; id <= 8; id++) {
+    const wf = document.getElementById('wf-' + id);
+    for (let i = 0; i < 20; i++) {
+      const bar = document.createElement('div');
+      bar.className = 'wf-bar';
+      bar.style.height = (Math.random() * 12 + 4) + 'px';
+      bar.style.animationDelay = (Math.random() * 0.8).toFixed(2) + 's';
+      wf.appendChild(bar);
+    }
+  }
+
+  function filterVoices(filter, el) {
+    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+
+    document.querySelectorAll('.voice-card').forEach(card => {
+      const gender = card.dataset.gender;
+      const style = card.dataset.style;
+      if (filter === 'all' ||
+          filter === gender ||
+          filter === style) {
+        card.style.display = '';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  }
+
+  function previewVoice(id, e) {
+    e.stopPropagation();
+
+    // Stop any playing
+    if (playTimeout) clearTimeout(playTimeout);
+    document.querySelectorAll('.btn-preview').forEach(b => { b.classList.remove('playing'); b.textContent = 'Preview'; });
+    document.querySelectorAll('.preview-waveform').forEach(w => { w.classList.remove('show', 'playing'); });
+
+    if (playingVoiceId === id) {
+      playingVoiceId = null;
+      return;
+    }
+
+    playingVoiceId = id;
+    const btn = e.target;
+    btn.classList.add('playing');
+    btn.textContent = 'Playing...';
+
+    const wf = document.getElementById('wf-' + id);
+    wf.classList.add('show', 'playing');
+
+    // Simulate playing for 3 seconds
+    playTimeout = setTimeout(() => {
+      btn.classList.remove('playing');
+      btn.textContent = 'Preview';
+      wf.classList.remove('playing');
+      playingVoiceId = null;
+    }, 3000);
+  }
+
+  function selectVoice(id, name) {
+    // Deselect all
+    document.querySelectorAll('.voice-card').forEach(c => c.classList.remove('selected'));
+
+    // Select this one
+    const card = document.querySelector(`.voice-card[data-id="${id}"]`);
+    card.classList.add('selected');
+    selectedVoiceId = id;
+
+    // Update action bar
+    document.getElementById('selectedVoiceName').textContent = name;
+    document.getElementById('continueBtn').classList.add('enabled');
+  }
+</script>
+
+</body>
+</html>

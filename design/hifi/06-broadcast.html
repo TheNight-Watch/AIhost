@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI HOST // BROADCAST</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=DM+Serif+Display&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --mint: #98E4C9;
+    --cream: #FFF8E7;
+    --peach: #FFD4B8;
+    --teal: #2D6A5C;
+    --charcoal: #333;
+    --mint-light: #C8F0E2;
+    --mint-dark: #6BD4AF;
+    --window-bar: #E8E0D0;
+    --font-mono: 'IBM Plex Mono', 'Courier New', monospace;
+    --font-serif: 'DM Serif Display', serif;
+    --radius: 14px;
+  }
+
+  body {
+    font-family: var(--font-mono);
+    background: #2A2A2A;
+    color: var(--cream);
+    min-height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ===== TOP BAR ===== */
+  .top-bar {
+    display: flex;
+    align-items: center;
+    background: var(--charcoal);
+    height: 42px;
+    padding: 0 20px;
+    gap: 16px;
+    border-bottom: 2px solid #444;
+  }
+
+  .top-logo {
+    font-family: var(--font-serif);
+    font-size: 18px;
+    color: var(--mint);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+  }
+
+  .top-logo .pixel-icon {
+    width: 14px;
+    height: 14px;
+    background: var(--mint);
+    border-radius: 3px;
+    border: 1.5px solid var(--cream);
+  }
+
+  .top-event {
+    font-size: 12px;
+    color: #aaa;
+    flex: 1;
+  }
+
+  .live-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #FF6B6B;
+    background: rgba(255, 107, 107, 0.15);
+    padding: 4px 12px;
+    border-radius: 6px;
+    border: 1.5px solid #FF6B6B;
+  }
+
+  .live-dot {
+    width: 8px;
+    height: 8px;
+    background: #FF6B6B;
+    border-radius: 50%;
+    animation: livePulse 1.2s infinite;
+  }
+
+  @keyframes livePulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+  }
+
+  .top-back {
+    font-size: 11px;
+    color: #888;
+    text-decoration: none;
+    padding: 4px 10px;
+    border: 1px solid #555;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+
+  .top-back:hover {
+    color: var(--cream);
+    border-color: var(--mint);
+  }
+
+  /* ===== MAIN LAYOUT ===== */
+  .broadcast-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr 260px;
+    height: calc(100vh - 42px - 72px);
+  }
+
+  /* ===== TIMELINE SIDEBAR ===== */
+  .timeline-panel {
+    background: #1E1E1E;
+    border-right: 2px solid #444;
+    overflow-y: auto;
+    padding: 0;
+  }
+
+  .timeline-header {
+    padding: 12px 16px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #666;
+    border-bottom: 1px solid #333;
+    background: #252525;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+
+  .timeline-list {
+    padding: 8px 0;
+  }
+
+  .timeline-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-left: 3px solid transparent;
+    position: relative;
+  }
+
+  .timeline-item:hover {
+    background: rgba(152, 228, 201, 0.08);
+  }
+
+  .timeline-item.past {
+    opacity: 0.5;
+  }
+
+  .timeline-item.past .tl-marker {
+    background: var(--mint-dark);
+    border-color: var(--mint-dark);
+  }
+
+  .timeline-item.current {
+    background: rgba(152, 228, 201, 0.15);
+    border-left-color: var(--mint);
+  }
+
+  .timeline-item.upcoming {
+    opacity: 0.7;
+  }
+
+  .tl-marker {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #555;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 700;
+    color: #888;
+    flex-shrink: 0;
+    background: #2A2A2A;
+    margin-top: 2px;
+  }
+
+  .timeline-item.past .tl-marker::after {
+    content: '';
+    font-size: 10px;
+    color: var(--mint);
+  }
+
+  .timeline-item.current .tl-marker {
+    background: var(--mint);
+    border-color: var(--teal);
+    color: var(--teal);
+    animation: currentPulse 2s infinite;
+  }
+
+  @keyframes currentPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(152, 228, 201, 0.4); }
+    50% { box-shadow: 0 0 0 4px rgba(152, 228, 201, 0.1); }
+  }
+
+  .tl-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .tl-section {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--cream);
+    margin-bottom: 2px;
+  }
+
+  .timeline-item.past .tl-section {
+    color: #888;
+    text-decoration: line-through;
+    text-decoration-color: var(--mint-dark);
+  }
+
+  .tl-time {
+    font-size: 10px;
+    color: #666;
+  }
+
+  .tl-check {
+    font-size: 10px;
+    color: var(--mint-dark);
+  }
+
+  /* ===== CENTER: NOW PLAYING ===== */
+  .center-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    position: relative;
+  }
+
+  .now-playing-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--mint);
+    margin-bottom: 8px;
+  }
+
+  .now-playing-section {
+    font-family: var(--font-serif);
+    font-size: 18px;
+    color: var(--peach);
+    margin-bottom: 32px;
+  }
+
+  /* Teleprompter text */
+  .teleprompter {
+    max-width: 700px;
+    text-align: center;
+    position: relative;
+  }
+
+  .teleprompter-text {
+    font-family: var(--font-serif);
+    font-size: 32px;
+    line-height: 1.6;
+    color: var(--cream);
+    transition: all 0.5s;
+  }
+
+  .speaker-label {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--mint);
+    background: rgba(152, 228, 201, 0.15);
+    padding: 3px 10px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+  }
+
+  /* Waveform visualization */
+  .waveform-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    height: 60px;
+    margin: 32px 0 16px;
+  }
+
+  .wave-bar {
+    width: 4px;
+    border-radius: 3px;
+    background: var(--mint);
+    transition: height 0.15s;
+  }
+
+  .wave-bar.active {
+    background: var(--mint);
+  }
+
+  .wave-bar.played {
+    background: #555;
+  }
+
+  /* Progress bar */
+  .line-progress {
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  .progress-track {
+    width: 100%;
+    height: 6px;
+    background: #444;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--mint);
+    border-radius: 3px;
+    transition: width 0.3s;
+    width: 35%;
+  }
+
+  .progress-times {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: #666;
+    letter-spacing: 0.08em;
+  }
+
+  /* ===== RIGHT SIDEBAR ===== */
+  .info-panel {
+    background: #1E1E1E;
+    border-left: 2px solid #444;
+    padding: 0;
+    overflow-y: auto;
+  }
+
+  .info-header {
+    padding: 12px 16px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #666;
+    border-bottom: 1px solid #333;
+    background: #252525;
+  }
+
+  .info-section {
+    padding: 16px;
+    border-bottom: 1px solid #333;
+  }
+
+  .info-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #666;
+    margin-bottom: 6px;
+  }
+
+  .info-value {
+    font-size: 13px;
+    color: var(--cream);
+    font-weight: 600;
+  }
+
+  .info-value.large {
+    font-family: var(--font-serif);
+    font-size: 24px;
+    color: var(--mint);
+  }
+
+  .overall-progress {
+    width: 100%;
+    height: 8px;
+    background: #333;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+
+  .overall-fill {
+    height: 100%;
+    background: var(--mint);
+    border-radius: 4px;
+    transition: width 0.5s;
+  }
+
+  .voice-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .voice-indicator {
+    width: 8px;
+    height: 8px;
+    background: var(--mint);
+    border-radius: 50%;
+    animation: pulse-dot 2s infinite;
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* Auto-play toggle */
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid #333;
+  }
+
+  .toggle-label {
+    font-size: 11px;
+    color: #aaa;
+  }
+
+  .toggle-switch {
+    width: 40px;
+    height: 22px;
+    background: #444;
+    border-radius: 11px;
+    cursor: pointer;
+    position: relative;
+    transition: background 0.3s;
+  }
+
+  .toggle-switch.on {
+    background: var(--teal);
+  }
+
+  .toggle-switch::after {
+    content: '';
+    width: 18px;
+    height: 18px;
+    background: var(--cream);
+    border-radius: 50%;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    transition: transform 0.3s;
+  }
+
+  .toggle-switch.on::after {
+    transform: translateX(18px);
+  }
+
+  /* ===== CONTROLS BAR ===== */
+  .controls-bar {
+    height: 72px;
+    background: var(--charcoal);
+    border-top: 2px solid #444;
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    gap: 16px;
+  }
+
+  /* Transport controls */
+  .transport {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .ctrl-btn {
+    width: 40px;
+    height: 40px;
+    border: 2px solid #555;
+    border-radius: 10px;
+    background: #2A2A2A;
+    color: var(--cream);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: all 0.15s;
+    box-shadow: 0 3px 0 #1A1A1A;
+    position: relative;
+    top: 0;
+  }
+
+  .ctrl-btn:hover {
+    border-color: var(--mint);
+    color: var(--mint);
+    top: 1px;
+    box-shadow: 0 2px 0 #1A1A1A;
+  }
+
+  .ctrl-btn:active {
+    top: 3px;
+    box-shadow: 0 0px 0 #1A1A1A;
+  }
+
+  .ctrl-btn.play {
+    width: 50px;
+    height: 50px;
+    border-radius: 14px;
+    background: var(--mint);
+    color: var(--teal);
+    border-color: var(--teal);
+    font-size: 18px;
+    box-shadow: 0 4px 0 var(--teal);
+  }
+
+  .ctrl-btn.play:hover {
+    background: var(--mint-dark);
+    color: var(--teal);
+  }
+
+  .ctrl-btn.play.paused {
+    background: var(--peach);
+    border-color: #CC8866;
+    box-shadow: 0 4px 0 #CC8866;
+  }
+
+  .ctrl-btn.stop {
+    background: #FF6B6B;
+    border-color: #CC4444;
+    color: #fff;
+    box-shadow: 0 3px 0 #CC4444;
+  }
+
+  /* Volume */
+  .volume-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 16px;
+  }
+
+  .volume-label {
+    font-size: 10px;
+    color: #666;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .volume-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100px;
+    height: 6px;
+    background: #444;
+    border-radius: 3px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  .volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    background: var(--mint);
+    border: 2px solid var(--teal);
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  /* Speed control */
+  .speed-control {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: 16px;
+  }
+
+  .speed-btn {
+    padding: 4px 8px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    background: transparent;
+    border: 1.5px solid #555;
+    border-radius: 4px;
+    color: #888;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .speed-btn:hover { border-color: var(--mint); color: var(--mint); }
+  .speed-btn.active { background: var(--teal); border-color: var(--teal); color: var(--cream); }
+
+  .controls-spacer { flex: 1; }
+
+  .time-display {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--mint);
+    letter-spacing: 0.08em;
+  }
+
+  .time-separator {
+    color: #555;
+    margin: 0 4px;
+  }
+
+  .time-total {
+    color: #666;
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="top-bar">
+  <a class="top-logo" href="./02-dashboard.html">
+    <span class="pixel-icon"></span>
+    AI Host
+  </a>
+  <span class="top-event">2024 Annual Tech Summit // Live Broadcast</span>
+  <div class="live-badge">
+    <div class="live-dot"></div>
+    LIVE
+  </div>
+  <a class="top-back" href="./05-script-lines.html">Back to Editor</a>
+</div>
+
+<!-- MAIN LAYOUT -->
+<div class="broadcast-layout">
+
+  <!-- TIMELINE SIDEBAR -->
+  <div class="timeline-panel">
+    <div class="timeline-header">Timeline // Script Lines</div>
+    <div class="timeline-list" id="timelineList">
+
+      <div class="timeline-item past" data-idx="0" onclick="jumpToLine(0)">
+        <div class="tl-marker">01</div>
+        <div class="tl-info">
+          <div class="tl-section">Opening</div>
+          <div class="tl-time">00:00 - 00:12 <span class="tl-check">&#10003;</span></div>
+        </div>
+      </div>
+
+      <div class="timeline-item past" data-idx="1" onclick="jumpToLine(1)">
+        <div class="tl-marker">02</div>
+        <div class="tl-info">
+          <div class="tl-section">Agenda Overview</div>
+          <div class="tl-time">00:12 - 00:27 <span class="tl-check">&#10003;</span></div>
+        </div>
+      </div>
+
+      <div class="timeline-item current" data-idx="2" onclick="jumpToLine(2)">
+        <div class="tl-marker">03</div>
+        <div class="tl-info">
+          <div class="tl-section">Guest: Dr. Sarah Chen</div>
+          <div class="tl-time">00:27 - 00:45</div>
+        </div>
+      </div>
+
+      <div class="timeline-item upcoming" data-idx="3" onclick="jumpToLine(3)">
+        <div class="tl-marker">04</div>
+        <div class="tl-info">
+          <div class="tl-section">Transition / Break</div>
+          <div class="tl-time">00:45 - 00:50</div>
+        </div>
+      </div>
+
+      <div class="timeline-item upcoming" data-idx="4" onclick="jumpToLine(4)">
+        <div class="tl-marker">05</div>
+        <div class="tl-info">
+          <div class="tl-section">Guest: Mark Johnson</div>
+          <div class="tl-time">00:50 - 01:05</div>
+        </div>
+      </div>
+
+      <div class="timeline-item upcoming" data-idx="5" onclick="jumpToLine(5)">
+        <div class="tl-marker">06</div>
+        <div class="tl-info">
+          <div class="tl-section">Panel Discussion</div>
+          <div class="tl-time">01:05 - 01:25</div>
+        </div>
+      </div>
+
+      <div class="timeline-item upcoming" data-idx="6" onclick="jumpToLine(6)">
+        <div class="tl-marker">07</div>
+        <div class="tl-info">
+          <div class="tl-section">Q&A Session</div>
+          <div class="tl-time">01:25 - 01:35</div>
+        </div>
+      </div>
+
+      <div class="timeline-item upcoming" data-idx="7" onclick="jumpToLine(7)">
+        <div class="tl-marker">08</div>
+        <div class="tl-info">
+          <div class="tl-section">Closing Remarks</div>
+          <div class="tl-time">01:35 - 01:45</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- CENTER: NOW PLAYING -->
+  <div class="center-panel">
+    <div class="now-playing-label">Now Playing</div>
+    <div class="now-playing-section" id="currentSection">SEC. 03 // Guest Introduction</div>
+
+    <div class="teleprompter">
+      <div class="speaker-label" id="speakerLabel">AI Host</div>
+      <div class="teleprompter-text" id="teleprompterText">
+        It's my great pleasure to introduce our first keynote speaker, Dr. Sarah Chen, Chief AI Officer at TechVision Labs, a pioneer in responsible AI development.
+      </div>
+    </div>
+
+    <!-- Waveform -->
+    <div class="waveform-display" id="waveformDisplay"></div>
+
+    <!-- Progress -->
+    <div class="line-progress">
+      <div class="progress-track">
+        <div class="progress-fill" id="lineProgressFill"></div>
+      </div>
+      <div class="progress-times">
+        <span id="lineCurrentTime">0:06</span>
+        <span id="lineTotalTime">0:18</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT SIDEBAR -->
+  <div class="info-panel">
+    <div class="info-header">Event Info</div>
+
+    <div class="info-section">
+      <div class="info-label">Current Line</div>
+      <div class="info-value large" id="infoCurrentLine">3 / 8</div>
+    </div>
+
+    <div class="info-section">
+      <div class="info-label">Overall Progress</div>
+      <div class="info-value" id="infoProgress">25%</div>
+      <div class="overall-progress">
+        <div class="overall-fill" id="overallFill" style="width: 25%"></div>
+      </div>
+    </div>
+
+    <div class="info-section">
+      <div class="info-label">Voice</div>
+      <div class="voice-info">
+        <div class="voice-indicator"></div>
+        <span class="info-value">Gentle Female</span>
+      </div>
+    </div>
+
+    <div class="info-section">
+      <div class="info-label">Elapsed</div>
+      <div class="info-value" id="infoElapsed">00:33</div>
+    </div>
+
+    <div class="info-section">
+      <div class="info-label">Remaining</div>
+      <div class="info-value" id="infoRemaining">~04:00</div>
+    </div>
+
+    <div class="toggle-row">
+      <span class="toggle-label">Auto-Play</span>
+      <div class="toggle-switch on" id="autoPlayToggle" onclick="toggleAutoPlay()"></div>
+    </div>
+
+    <div class="toggle-row">
+      <span class="toggle-label">Loop</span>
+      <div class="toggle-switch" id="loopToggle" onclick="toggleLoop()"></div>
+    </div>
+
+    <div class="info-section" style="border-bottom:none">
+      <div class="info-label">Event</div>
+      <div class="info-value" style="font-size:11px;">2024 Annual Tech Summit</div>
+      <div style="font-size:10px; color:#666; margin-top:4px;">2026-03-20</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- CONTROLS BAR -->
+<div class="controls-bar">
+  <div class="transport">
+    <button class="ctrl-btn stop" onclick="stopBroadcast()" title="Stop">&#9724;</button>
+    <button class="ctrl-btn" onclick="prevLine()" title="Previous">&#9664;&#9664;</button>
+    <button class="ctrl-btn play" id="playBtn" onclick="togglePlayPause()" title="Play/Pause">&#9654;</button>
+    <button class="ctrl-btn" onclick="nextLine()" title="Next">&#9654;&#9654;</button>
+  </div>
+
+  <div class="volume-control">
+    <span class="volume-label">Vol</span>
+    <input type="range" class="volume-slider" min="0" max="100" value="80" id="volumeSlider">
+  </div>
+
+  <div class="speed-control">
+    <button class="speed-btn" onclick="setSpeed(0.5, this)">0.5x</button>
+    <button class="speed-btn active" onclick="setSpeed(1, this)">1x</button>
+    <button class="speed-btn" onclick="setSpeed(1.5, this)">1.5x</button>
+    <button class="speed-btn" onclick="setSpeed(2, this)">2x</button>
+  </div>
+
+  <div class="controls-spacer"></div>
+
+  <div class="time-display">
+    <span id="elapsedTime">00:33</span>
+    <span class="time-separator">/</span>
+    <span class="time-total" id="totalTime">04:30</span>
+  </div>
+</div>
+
+<script>
+  // ===== DATA =====
+  const scriptLines = [
+    { section: 'Opening', text: 'Welcome to the 2024 Annual Tech Summit! I\'m your AI host. Over the next few hours, we will explore innovations shaping our future together.', duration: 12 },
+    { section: 'Agenda Overview', text: 'Let me walk you through today\'s agenda. Three keynote sessions, two panel discussions, and a networking break. Each session designed for actionable insights.', duration: 15 },
+    { section: 'Guest: Dr. Sarah Chen', text: 'It\'s my great pleasure to introduce our first keynote speaker, Dr. Sarah Chen, Chief AI Officer at TechVision Labs, a pioneer in responsible AI development.', duration: 18 },
+    { section: 'Transition / Break', text: 'Thank you, Dr. Chen. Before we move on, let\'s take a quick five-minute break. Help yourselves to refreshments in the lobby.', duration: 10 },
+    { section: 'Guest: Mark Johnson', text: 'Welcome back. Our second speaker is Mark Johnson, VP of Product at CloudScale. He will share enterprise AI-powered workflow integration strategies.', duration: 15 },
+    { section: 'Panel Discussion', text: 'Let\'s move into our panel discussion on "The Future of Human-AI Collaboration." Panelists, please join me on stage. Audience Q&A in twenty minutes.', duration: 14 },
+    { section: 'Q&A Session', text: 'We\'re opening the floor for questions. Please raise your hand, our staff will bring a microphone. Time for five to six questions.', duration: 11 },
+    { section: 'Closing Remarks', text: 'That brings us to the end of the 2024 Annual Tech Summit. Thank you all. We hope today sparked new ideas. See you next year!', duration: 12 },
+  ];
+
+  let currentIdx = 2;
+  let isPlaying = true;
+  let autoPlay = true;
+  let loopMode = false;
+  let lineProgress = 35;
+  let lineTimer = null;
+  let waveTimer = null;
+
+  // ===== INIT WAVEFORM =====
+  const waveDisplay = document.getElementById('waveformDisplay');
+  const barCount = 60;
+  for (let i = 0; i < barCount; i++) {
+    const bar = document.createElement('div');
+    bar.className = 'wave-bar';
+    bar.style.height = '8px';
+    waveDisplay.appendChild(bar);
+  }
+
+  function animateWaveform() {
+    const bars = waveDisplay.querySelectorAll('.wave-bar');
+    bars.forEach((bar, i) => {
+      const progress = lineProgress / 100;
+      const playedIdx = Math.floor(progress * barCount);
+      if (i < playedIdx) {
+        bar.classList.add('played');
+        bar.classList.remove('active');
+        bar.style.height = (Math.random() * 20 + 8) + 'px';
+      } else if (i === playedIdx || i === playedIdx + 1) {
+        bar.classList.add('active');
+        bar.classList.remove('played');
+        bar.style.height = (Math.random() * 40 + 15) + 'px';
+      } else {
+        bar.classList.remove('played', 'active');
+        bar.style.height = (Math.random() * 15 + 5) + 'px';
+        bar.style.opacity = '0.3';
+      }
+    });
+  }
+
+  function updateDisplay() {
+    const line = scriptLines[currentIdx];
+    document.getElementById('teleprompterText').textContent = line.text;
+    document.getElementById('currentSection').textContent = `SEC. ${String(currentIdx + 1).padStart(2, '0')} // ${line.section}`;
+    document.getElementById('speakerLabel').textContent = 'AI Host';
+
+    // Update progress
+    const elapsed = Math.floor(line.duration * lineProgress / 100);
+    document.getElementById('lineCurrentTime').textContent = `0:${String(elapsed).padStart(2, '0')}`;
+    document.getElementById('lineTotalTime').textContent = `0:${String(line.duration).padStart(2, '0')}`;
+    document.getElementById('lineProgressFill').style.width = lineProgress + '%';
+
+    // Info panel
+    document.getElementById('infoCurrentLine').textContent = `${currentIdx + 1} / ${scriptLines.length}`;
+    const overallPct = Math.round(((currentIdx + lineProgress / 100) / scriptLines.length) * 100);
+    document.getElementById('infoProgress').textContent = overallPct + '%';
+    document.getElementById('overallFill').style.width = overallPct + '%';
+
+    // Timeline
+    document.querySelectorAll('.timeline-item').forEach((item, i) => {
+      item.classList.remove('past', 'current', 'upcoming');
+      if (i < currentIdx) item.classList.add('past');
+      else if (i === currentIdx) item.classList.add('current');
+      else item.classList.add('upcoming');
+    });
+
+    animateWaveform();
+  }
+
+  function startPlayback() {
+    if (lineTimer) clearInterval(lineTimer);
+    if (waveTimer) clearInterval(waveTimer);
+
+    lineTimer = setInterval(() => {
+      if (!isPlaying) return;
+      lineProgress += 2;
+      if (lineProgress >= 100) {
+        lineProgress = 0;
+        if (autoPlay && currentIdx < scriptLines.length - 1) {
+          currentIdx++;
+        } else if (loopMode && currentIdx >= scriptLines.length - 1) {
+          currentIdx = 0;
+        } else {
+          isPlaying = false;
+          updatePlayBtn();
+          clearInterval(lineTimer);
+          clearInterval(waveTimer);
+        }
+      }
+      updateDisplay();
+    }, 300);
+
+    waveTimer = setInterval(() => {
+      if (isPlaying) animateWaveform();
+    }, 200);
+  }
+
+  function togglePlayPause() {
+    isPlaying = !isPlaying;
+    updatePlayBtn();
+    if (isPlaying) startPlayback();
+  }
+
+  function updatePlayBtn() {
+    const btn = document.getElementById('playBtn');
+    if (isPlaying) {
+      btn.innerHTML = '&#9646;&#9646;';
+      btn.classList.remove('paused');
+    } else {
+      btn.innerHTML = '&#9654;';
+      btn.classList.add('paused');
+    }
+  }
+
+  function prevLine() {
+    if (currentIdx > 0) {
+      currentIdx--;
+      lineProgress = 0;
+      updateDisplay();
+    }
+  }
+
+  function nextLine() {
+    if (currentIdx < scriptLines.length - 1) {
+      currentIdx++;
+      lineProgress = 0;
+      updateDisplay();
+    }
+  }
+
+  function jumpToLine(idx) {
+    currentIdx = idx;
+    lineProgress = 0;
+    updateDisplay();
+    if (!isPlaying) {
+      isPlaying = true;
+      updatePlayBtn();
+      startPlayback();
+    }
+  }
+
+  function stopBroadcast() {
+    isPlaying = false;
+    currentIdx = 0;
+    lineProgress = 0;
+    updatePlayBtn();
+    if (lineTimer) clearInterval(lineTimer);
+    if (waveTimer) clearInterval(waveTimer);
+    updateDisplay();
+  }
+
+  function setSpeed(speed, el) {
+    document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    // In a real app, adjust playback speed
+  }
+
+  function toggleAutoPlay() {
+    autoPlay = !autoPlay;
+    document.getElementById('autoPlayToggle').classList.toggle('on', autoPlay);
+  }
+
+  function toggleLoop() {
+    loopMode = !loopMode;
+    document.getElementById('loopToggle').classList.toggle('on', loopMode);
+  }
+
+  // Init
+  updateDisplay();
+  updatePlayBtn();
+  startPlayback();
+</script>
+
+</body>
+</html>

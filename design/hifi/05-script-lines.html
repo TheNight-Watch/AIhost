@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI HOST // SCRIPT LINES</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=DM+Serif+Display&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --mint: #98E4C9;
+    --cream: #FFF8E7;
+    --peach: #FFD4B8;
+    --teal: #2D6A5C;
+    --charcoal: #333;
+    --mint-light: #C8F0E2;
+    --mint-dark: #6BD4AF;
+    --window-bar: #E8E0D0;
+    --font-mono: 'IBM Plex Mono', 'Courier New', monospace;
+    --font-serif: 'DM Serif Display', serif;
+    --radius: 14px;
+  }
+
+  body {
+    font-family: var(--font-mono);
+    background: var(--cream);
+    color: var(--charcoal);
+    min-height: 100vh;
+    padding-bottom: 60px;
+  }
+
+  /* ===== NAVBAR ===== */
+  .navbar {
+    display: flex;
+    align-items: center;
+    background: var(--teal);
+    color: var(--cream);
+    height: 38px;
+    padding: 0 16px;
+    gap: 24px;
+    font-size: 13px;
+    font-weight: 500;
+    border-bottom: 3px solid #1F4F44;
+  }
+
+  .nav-logo {
+    font-family: var(--font-serif);
+    font-size: 20px;
+    letter-spacing: 0.02em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: var(--cream);
+  }
+
+  .nav-logo .pixel-icon {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    background: var(--mint);
+    border-radius: 4px;
+    border: 2px solid var(--cream);
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 4px;
+    flex: 1;
+  }
+
+  .nav-link {
+    color: var(--cream);
+    text-decoration: none;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+
+  .nav-link:hover { background: rgba(255,255,255,0.15); }
+  .nav-link.active { background: var(--mint); color: var(--teal); font-weight: 700; }
+
+  .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 11px;
+  }
+
+  .nav-voice {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .voice-dot {
+    width: 7px;
+    height: 7px;
+    background: var(--mint);
+    border-radius: 50%;
+    animation: pulse-dot 2s infinite;
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .nav-user {
+    background: var(--peach);
+    color: var(--charcoal);
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  /* ===== EVENT BAR ===== */
+  .event-bar {
+    background: var(--mint-light);
+    border-bottom: 2px dashed var(--mint-dark);
+    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+  }
+
+  .event-title {
+    font-family: var(--font-serif);
+    font-size: 16px;
+    color: var(--teal);
+  }
+
+  .event-meta {
+    color: var(--teal);
+    opacity: 0.7;
+  }
+
+  /* ===== MAIN LAYOUT ===== */
+  .main-layout {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 20px;
+    padding: 20px 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  /* ===== WINDOW ===== */
+  .window {
+    border: 2px solid var(--charcoal);
+    border-radius: var(--radius);
+    background: var(--cream);
+    overflow: hidden;
+  }
+
+  .window-bar {
+    background: var(--window-bar);
+    border-bottom: 2px solid var(--charcoal);
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+  }
+
+  .window-dots {
+    display: flex;
+    gap: 6px;
+  }
+
+  .window-dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    border: 1.5px solid var(--charcoal);
+  }
+  .window-dot.red { background: #FF6B6B; }
+  .window-dot.yellow { background: #FFDA6B; }
+  .window-dot.green { background: #6BD4AF; }
+
+  .window-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    flex: 1;
+    text-align: center;
+    color: var(--charcoal);
+  }
+
+  /* ===== ACTION BAR ===== */
+  .action-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-bottom: 2px dashed #ddd;
+    background: #FFFDF5;
+  }
+
+  .btn-action {
+    border: 2px solid var(--charcoal);
+    border-radius: 10px;
+    padding: 8px 18px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-generate-all {
+    background: var(--teal);
+    color: var(--cream);
+  }
+
+  .btn-generate-all:hover {
+    background: var(--charcoal);
+    color: var(--mint);
+    transform: translateY(-1px);
+  }
+
+  .btn-broadcast {
+    background: var(--peach);
+    color: var(--charcoal);
+  }
+
+  .btn-broadcast:hover {
+    background: var(--charcoal);
+    color: var(--peach);
+    transform: translateY(-1px);
+  }
+
+  .btn-add-line {
+    background: var(--mint);
+    color: var(--teal);
+  }
+
+  .btn-add-line:hover {
+    background: var(--teal);
+    color: var(--mint);
+    transform: translateY(-1px);
+  }
+
+  .action-spacer { flex: 1; }
+
+  .sys-code {
+    font-size: 10px;
+    color: #aaa;
+    letter-spacing: 0.05em;
+  }
+
+  .batch-progress {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--teal);
+    font-weight: 600;
+  }
+
+  .batch-progress.show {
+    display: flex;
+  }
+
+  .batch-bar {
+    width: 120px;
+    height: 8px;
+    background: #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .batch-fill {
+    height: 100%;
+    background: var(--mint);
+    border-radius: 4px;
+    transition: width 0.5s;
+    width: 0%;
+  }
+
+  /* ===== PIXEL DIVIDER ===== */
+  .pixel-divider {
+    display: flex;
+    gap: 4px;
+    padding: 6px 16px;
+    background: #FFFDF5;
+    justify-content: center;
+  }
+
+  .pixel-block {
+    width: 6px;
+    height: 6px;
+    border-radius: 2px;
+  }
+
+  /* ===== SCRIPT ITEMS ===== */
+  .script-list {
+    position: relative;
+  }
+
+  .script-item {
+    display: grid;
+    grid-template-columns: 160px 1fr 120px;
+    border-bottom: 2px dashed #ddd;
+    min-height: 90px;
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative;
+  }
+
+  .script-item:last-child { border-bottom: none; }
+
+  .script-item:hover { background: var(--mint-light); }
+  .script-item.selected { background: var(--mint); }
+  .script-item.playing { background: var(--peach); }
+
+  .script-item > * { padding: 14px 16px; }
+
+  /* Drag handle hint */
+  .script-item::before {
+    content: '::::';
+    position: absolute;
+    left: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 10px;
+    color: #ccc;
+    letter-spacing: 1px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .script-item:hover::before {
+    opacity: 1;
+  }
+
+  .item-left {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+    border-right: 2px dashed #ddd;
+  }
+
+  .item-section {
+    font-family: var(--font-serif);
+    font-size: 17px;
+    line-height: 1.2;
+    color: var(--teal);
+  }
+
+  .item-label {
+    font-size: 10px;
+    color: #999;
+    letter-spacing: 0.05em;
+  }
+
+  .item-center {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .script-text-area {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--charcoal);
+    background: transparent;
+    border: none;
+    border-bottom: 2px dashed #ccc;
+    padding: 6px 0;
+    outline: none;
+    resize: none;
+    width: 100%;
+    min-height: 40px;
+    transition: border-color 0.2s;
+  }
+
+  .script-text-area:focus {
+    border-bottom-color: var(--teal);
+    border-bottom-style: solid;
+  }
+
+  .audio-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .audio-play {
+    width: 28px;
+    height: 28px;
+    border: 2px solid var(--charcoal);
+    border-radius: 8px;
+    background: var(--cream);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+
+  .audio-play:hover {
+    background: var(--teal);
+    color: var(--cream);
+  }
+
+  .waveform-mini {
+    flex: 1;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .wf-bar {
+    width: 3px;
+    background: var(--teal);
+    border-radius: 2px;
+    opacity: 0.25;
+    transition: opacity 0.3s;
+  }
+
+  .wf-bar.active { opacity: 0.7; }
+
+  .script-item.playing .wf-bar { background: var(--charcoal); }
+
+  @keyframes waveAnim {
+    0%, 100% { transform: scaleY(0.4); }
+    50% { transform: scaleY(1); }
+  }
+
+  .script-item.playing .wf-bar.active {
+    animation: waveAnim 0.8s ease-in-out infinite;
+  }
+
+  .audio-time {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: #888;
+    flex-shrink: 0;
+  }
+
+  .item-right {
+    border-left: 2px dashed #ddd;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .btn-gen {
+    background: var(--mint);
+    color: var(--teal);
+    border: 2px solid var(--teal);
+    border-radius: 10px;
+    padding: 6px 14px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    transition: all 0.2s;
+  }
+
+  .btn-gen:hover {
+    background: var(--teal);
+    color: var(--mint);
+    transform: translateY(-1px);
+  }
+
+  .btn-gen.done {
+    background: var(--teal);
+    color: var(--cream);
+  }
+
+  .btn-gen.generating {
+    background: var(--peach);
+    color: var(--charcoal);
+    animation: pulse-gen 1s infinite;
+  }
+
+  @keyframes pulse-gen {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+
+  .item-status {
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #aaa;
+  }
+
+  .script-item.playing .item-status { color: var(--charcoal); }
+
+  .item-actions {
+    display: flex;
+    gap: 4px;
+    margin-top: 4px;
+  }
+
+  .item-action-btn {
+    font-size: 9px;
+    padding: 2px 6px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: transparent;
+    color: #999;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    transition: all 0.2s;
+  }
+
+  .item-action-btn:hover {
+    border-color: var(--teal);
+    color: var(--teal);
+    background: var(--mint-light);
+  }
+
+  .item-action-btn.delete:hover {
+    border-color: #FF6B6B;
+    color: #FF6B6B;
+    background: #FFE0E0;
+  }
+
+  /* ===== CHAT SIDEBAR ===== */
+  .chat-window {
+    position: sticky;
+    top: 20px;
+  }
+
+  .chat-body {
+    display: flex;
+    flex-direction: column;
+    height: 580px;
+  }
+
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: #FFFDF5;
+  }
+
+  .chat-msg {
+    max-width: 85%;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 12px;
+    line-height: 1.6;
+    border: 2px solid var(--charcoal);
+    animation: msgIn 0.3s ease-out;
+  }
+
+  @keyframes msgIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .chat-msg.ai {
+    align-self: flex-start;
+    background: var(--mint-light);
+    border-color: var(--teal);
+  }
+
+  .chat-msg.user {
+    align-self: flex-end;
+    background: var(--peach);
+  }
+
+  .chat-msg .sender {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 4px;
+    color: var(--teal);
+  }
+
+  .chat-msg.user .sender { color: var(--charcoal); }
+
+  .chat-input-area {
+    display: flex;
+    gap: 8px;
+    padding: 12px 16px;
+    border-top: 2px dashed #ddd;
+    background: var(--cream);
+  }
+
+  .chat-input {
+    flex: 1;
+    border: 2px solid var(--charcoal);
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    background: #fff;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .chat-input:focus { border-color: var(--teal); }
+
+  .chat-send {
+    background: var(--teal);
+    color: var(--cream);
+    border: 2px solid var(--charcoal);
+    border-radius: 10px;
+    padding: 8px 16px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .chat-send:hover {
+    background: var(--charcoal);
+    color: var(--mint);
+  }
+
+  /* Typing indicator */
+  .typing-indicator {
+    display: none;
+    align-self: flex-start;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: var(--mint-light);
+    border: 2px solid var(--teal);
+  }
+
+  .typing-indicator.show { display: block; }
+
+  .typing-dots {
+    display: flex;
+    gap: 4px;
+  }
+
+  .typing-dots span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--teal);
+    animation: typingBounce 1.4s infinite;
+  }
+
+  .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes typingBounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-6px); opacity: 1; }
+  }
+
+  /* ===== STATUS BAR ===== */
+  .status-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--teal);
+    color: var(--cream);
+    height: 48px;
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    gap: 32px;
+    z-index: 100;
+    border-top: 3px solid #1F4F44;
+    font-size: 12px;
+  }
+
+  .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .stat-label {
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    opacity: 0.6;
+  }
+
+  .stat-value {
+    font-weight: 700;
+    font-size: 14px;
+  }
+
+  .stat-spacer { flex: 1; }
+
+  .stat-sys {
+    font-size: 10px;
+    opacity: 0.4;
+  }
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a class="nav-logo" href="./02-dashboard.html">
+    <span class="pixel-icon"></span>
+    AI Host
+  </a>
+  <div class="nav-links">
+    <a class="nav-link" href="./02-dashboard.html">Dashboard</a>
+    <a class="nav-link active" href="#">Script</a>
+    <a class="nav-link" href="./04-voice-select.html">Voices</a>
+  </div>
+  <div class="nav-right">
+    <div class="nav-voice">
+      <span class="voice-dot"></span>
+      Gentle Female
+    </div>
+    <div class="nav-user">U</div>
+  </div>
+</nav>
+
+<!-- EVENT BAR -->
+<div class="event-bar">
+  <div class="event-title">2024 Annual Tech Summit</div>
+  <div class="event-meta">SYS. VER 2.0 // Script Editor</div>
+</div>
+
+<!-- MAIN LAYOUT -->
+<div class="main-layout">
+
+  <!-- SCRIPT WINDOW -->
+  <div class="window">
+    <div class="window-bar">
+      <div class="window-dots">
+        <div class="window-dot red"></div>
+        <div class="window-dot yellow"></div>
+        <div class="window-dot green"></div>
+      </div>
+      <div class="window-title">script_lines.txt</div>
+    </div>
+    <div class="window-body">
+
+      <!-- Action bar -->
+      <div class="action-bar">
+        <button class="btn-action btn-generate-all" onclick="generateAll()">&#9654; Generate All</button>
+        <button class="btn-action btn-broadcast" onclick="window.location.href='./06-broadcast.html'">&#9673; Broadcast</button>
+        <button class="btn-action btn-add-line" onclick="addNewLine()">+ Add Line</button>
+        <div class="batch-progress" id="batchProgress">
+          <span id="batchText">Generating 0/8...</span>
+          <div class="batch-bar"><div class="batch-fill" id="batchFill"></div></div>
+        </div>
+        <div class="action-spacer"></div>
+        <span class="sys-code" id="lineCount">8 lines // ~4:30 total</span>
+      </div>
+
+      <!-- Pixel divider -->
+      <div class="pixel-divider" id="pixel-divider-top"></div>
+
+      <!-- Script Items -->
+      <div class="script-list" id="scriptList">
+
+        <div class="script-item selected" data-status="done" data-id="1">
+          <div class="item-left">
+            <div class="item-section">Opening</div>
+            <div class="item-label">SEC. 01 // 00:00</div>
+          </div>
+          <div class="item-center">
+            <textarea class="script-text-area" rows="2">Welcome to the 2024 Annual Tech Summit! I'm your AI host. Over the next few hours, we will explore innovations shaping our future together.</textarea>
+            <div class="audio-bar">
+              <button class="audio-play" onclick="togglePlay(1, event)">&#9654;</button>
+              <div class="waveform-mini" data-wf="1"></div>
+              <span class="audio-time">0:12</span>
+            </div>
+          </div>
+          <div class="item-right">
+            <button class="btn-gen done" onclick="generateSingle(1, event)">DONE</button>
+            <span class="item-status">12 SEC</span>
+            <div class="item-actions">
+              <button class="item-action-btn" onclick="editLine(1, event)">Edit</button>
+              <button class="item-action-btn delete" onclick="deleteLine(1, event)">Del</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="script-item" data-status="done" data-id="2">
+          <div class="item-left">
+            <div class="item-section">Agenda<br>Overview</div>
+            <div class="item-label">SEC. 02 // 00:12</div>
+          </div>
+          <div class="item-center">
+            <textarea class="script-text-area" rows="2">Let me walk you through today's agenda. Three keynote sessions, two panel discussions, and a networking break. Each session designed for actionable insights.</textarea>
+            <div class="audio-bar">
+              <button class="audio-play" onclick="togglePlay(2, event)">&#9654;</button>
+              <div class="waveform-mini" data-wf="2"></div>
+              <span class="audio-time">0:15</span>
+            </div>
+          </div>
+          <div class="item-right">
+            <button class="btn-gen done" onclick="generateSingle(2, event)">DONE</button>
+            <span class="item-status">15 SEC</span>
+            <div class="item-actions">
+              <button class="item-action-btn" onclick="editLine(2, event)">Edit</button>
+              <button class="item-action-btn delete" onclick="deleteLine(2, event)">Del</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="script-item" data-status="done" data-id="3">
+          <div class="item-left">
+            <div class="item-section">Guest<br>Dr. Sarah Chen</div>
+            <div class="item-label">SEC. 03 // 00:27</div>
+          </div>
+          <div class="item-center">
+            <textarea class="script-text-area" rows="2">It's my great pleasure to introduce our first keynote speaker, Dr. Sarah Chen, Chief AI Officer at TechVision Labs, a pioneer in responsible AI development.</textarea>
+            <div class="audio-bar">
+              <button class="audio-play" onclick="togglePlay(3, event)">&#9654;</button>
+              <div class="waveform-mini" data-wf="3"></div>
+              <span class="audio-time">0:18</span>
+            </div>
+          </div>
+          <div class="item-right">
+            <button class="btn-gen done" onclick="generateSingle(3, event)">DONE</button>
+            <span class="item-status">18 SEC</span>
+            <div class="item-actions">
+              <button class="item-action-btn" onclick="editLine(3, event)">Edit</button>
+              <button class="item-action-btn delete" onclick="deleteLine(3, event)">Del</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="script-item" data-status="pending" data-id="4">
+          <div class="item-left">
+            <div class="item-section">Transition</div>
+            <div class="item-label">SEC. 04 // 00:45</div>
+          </div>
+          <div class="item-center">
+            <textarea class="script-text-area" rows="2">Thank you, Dr. Chen. Before we move on, let's take a quick five-minute break. Help yourselves to refreshments in the lobby.</textarea>
+          </div>
+          <div class="item-right">
+            <button class="btn-gen" onclick="generateSingle(4, event)">GENERATE</button>
+            <span class="item-status">PENDING</span>
+            <div class="item-actions">
+              <button class="item-action-btn" onclick="editLine(4, event)">Edit</button>
+              <button class="item-action-btn delete" onclick="deleteLine(4, event)">Del</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="script-item" data-status="pending" data-id="5">
+          <div class="item-left">
+            <div class="item-section">Guest<br>Mark Johnson</div>
+            <div class="item-label">SEC. 05 // 00:50</div>
+          </div>
+          <div class="item-center">
+            <textarea class="script-text-area" rows="2">Welcome back. Our second speaker is Mark Johnson, VP of Product at CloudScale. He will share enterprise AI-powered workflow integration strategies.</textarea>
+          </div>
+          <div class="item-right">
+            <button class="btn-gen" onclick="generateSingle(5, event)">GENERATE</button>
+            <span class="item-status">PENDING</span>
+            <div class="item-actions">
+              <button class="item-action-btn" onclick="editLine(5, event)">Edit</button>
+              <button class="item-action-btn delete" onclick="deleteLine(5, event)">Del</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="script-item" data-status="pending" data-id="6">
+          <div class="item-left">
+            <div class="item-section">Panel<br>Discussion</div>
+            <div class="item-label">SEC. 06 // 01:05</div>
+          </div>
+          <div class="item-center">
+            <textarea class="script-text-area" rows="2">Let's move into our panel discussion on "The Future of Human-AI Collaboration." Panelists, please join me on stage. Audience Q&A in twenty minutes.</textarea>
+          </div>
+          <div class="item-right">
+            <button class="btn-gen" onclick="generateSingle(6, event)">GENERATE</button>
+            <span class="item-status">PENDING</span>
+            <div class="item-actions">
+              <button class="item-action-btn" onclick="editLine(6, event)">Edit</button>
+              <button class="item-action-btn delete" onclick="deleteLine(6, event)">Del</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="script-item" data-status="pending" data-id="7">
+          <div class="item-left">
+            <div class="item-section">Q&A<br>Session</div>
+            <div class="item-label">SEC. 07 // 01:25</div>
+          </div>
+          <div class="item-center">
+            <textarea class="script-text-area" rows="2">We're opening the floor for questions. Please raise your hand, our staff will bring a microphone. Time for five to six questions.</textarea>
+          </div>
+          <div class="item-right">
+            <button class="btn-gen" onclick="generateSingle(7, event)">GENERATE</button>
+            <span class="item-status">PENDING</span>
+            <div class="item-actions">
+              <button class="item-action-btn" onclick="editLine(7, event)">Edit</button>
+              <button class="item-action-btn delete" onclick="deleteLine(7, event)">Del</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="script-item" data-status="pending" data-id="8">
+          <div class="item-left">
+            <div class="item-section">Closing<br>Remarks</div>
+            <div class="item-label">SEC. 08 // 01:35</div>
+          </div>
+          <div class="item-center">
+            <textarea class="script-text-area" rows="2">That brings us to the end of the 2024 Annual Tech Summit. Thank you all. We hope today sparked new ideas. See you next year!</textarea>
+          </div>
+          <div class="item-right">
+            <button class="btn-gen" onclick="generateSingle(8, event)">GENERATE</button>
+            <span class="item-status">PENDING</span>
+            <div class="item-actions">
+              <button class="item-action-btn" onclick="editLine(8, event)">Edit</button>
+              <button class="item-action-btn delete" onclick="deleteLine(8, event)">Del</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- CHAT SIDEBAR -->
+  <div class="chat-window window">
+    <div class="window-bar">
+      <div class="window-dots">
+        <div class="window-dot red"></div>
+        <div class="window-dot yellow"></div>
+        <div class="window-dot green"></div>
+      </div>
+      <div class="window-title">ai_assistant.chat</div>
+    </div>
+    <div class="chat-body">
+      <div class="chat-messages" id="chatMessages">
+        <div class="chat-msg ai">
+          <div class="sender">AI Assistant</div>
+          Hi! I can help you refine your script lines. Select a section and tell me what you'd like to change -- tone, length, word choice, anything.
+        </div>
+        <div class="chat-msg user">
+          <div class="sender">You</div>
+          The opening feels a bit generic. Can you make it more energetic and add a hook?
+        </div>
+        <div class="chat-msg ai">
+          <div class="sender">AI Assistant</div>
+          Sure! Here's a revised version:<br><br>"The future isn't coming -- it's already here! Welcome to the 2024 Tech Summit. I'm your AI host, and trust me, the next few hours will change how you think about technology. Ready? Let's dive in."<br><br>Want me to apply this, or adjust further?
+        </div>
+        <div class="typing-indicator" id="typingIndicator">
+          <div class="typing-dots"><span></span><span></span><span></span></div>
+        </div>
+      </div>
+      <div class="chat-input-area">
+        <input class="chat-input" type="text" id="chatInput" placeholder="Type your message..." onkeypress="if(event.key==='Enter')sendChat()">
+        <button class="chat-send" onclick="sendChat()">Send</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- STATUS BAR -->
+<div class="status-bar">
+  <div class="stat-item">
+    <span class="stat-label">Lines</span>
+    <span class="stat-value" id="statLines">08</span>
+  </div>
+  <div class="stat-item">
+    <span class="stat-label">Generated</span>
+    <span class="stat-value" id="statGenerated">03 / 08</span>
+  </div>
+  <div class="stat-item">
+    <span class="stat-label">Progress</span>
+    <span class="stat-value" id="statProgress">37.5%</span>
+  </div>
+  <div class="stat-item">
+    <span class="stat-label">Est. Duration</span>
+    <span class="stat-value">~4:30</span>
+  </div>
+  <div class="stat-spacer"></div>
+  <div class="stat-sys">SYS.HOST.V2 // Script Editor</div>
+</div>
+
+<script>
+  // ===== WAVEFORMS =====
+  document.querySelectorAll('.waveform-mini').forEach(wf => {
+    for (let i = 0; i < 45; i++) {
+      const bar = document.createElement('div');
+      bar.className = 'wf-bar' + (i < 18 ? ' active' : '');
+      bar.style.height = (Math.random() * 14 + 4) + 'px';
+      bar.style.animationDelay = (Math.random() * 0.8).toFixed(2) + 's';
+      wf.appendChild(bar);
+    }
+  });
+
+  // ===== PIXEL DIVIDER =====
+  const divider = document.getElementById('pixel-divider-top');
+  const pxColors = ['#98E4C9', '#FFD4B8', '#2D6A5C', '#FFF8E7', '#98E4C9', '#FFD4B8'];
+  for (let i = 0; i < 60; i++) {
+    const block = document.createElement('div');
+    block.className = 'pixel-block';
+    block.style.background = pxColors[i % pxColors.length];
+    block.style.opacity = (Math.random() * 0.5 + 0.3).toFixed(2);
+    divider.appendChild(block);
+  }
+
+  // ===== SELECT SCRIPT ITEM =====
+  const items = document.querySelectorAll('.script-item');
+  items.forEach(item => {
+    item.addEventListener('click', function(e) {
+      if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'BUTTON') return;
+      items.forEach(i => { if (!i.classList.contains('playing')) i.classList.remove('selected'); });
+      if (!this.classList.contains('playing')) this.classList.add('selected');
+    });
+  });
+
+  // ===== PLAY/PAUSE =====
+  let playingId = null;
+  let playTimer = null;
+
+  function togglePlay(id, e) {
+    e.stopPropagation();
+    const item = document.querySelector(`.script-item[data-id="${id}"]`);
+    const btn = item.querySelector('.audio-play');
+
+    if (playingId === id) {
+      // Stop
+      item.classList.remove('playing');
+      btn.innerHTML = '&#9654;';
+      clearTimeout(playTimer);
+      playingId = null;
+      return;
+    }
+
+    // Stop any current
+    if (playingId) {
+      const prev = document.querySelector(`.script-item[data-id="${playingId}"]`);
+      if (prev) {
+        prev.classList.remove('playing');
+        prev.querySelector('.audio-play').innerHTML = '&#9654;';
+      }
+      clearTimeout(playTimer);
+    }
+
+    // Play
+    playingId = id;
+    item.classList.add('playing');
+    btn.innerHTML = '&#9646;&#9646;';
+
+    // Simulate play duration
+    playTimer = setTimeout(() => {
+      item.classList.remove('playing');
+      btn.innerHTML = '&#9654;';
+      playingId = null;
+    }, 4000);
+  }
+
+  // ===== GENERATE SINGLE =====
+  function generateSingle(id, e) {
+    e.stopPropagation();
+    const item = document.querySelector(`.script-item[data-id="${id}"]`);
+    const btn = item.querySelector('.btn-gen');
+    const status = item.querySelector('.item-status');
+
+    if (btn.classList.contains('done')) return;
+
+    btn.textContent = 'GEN...';
+    btn.classList.add('generating');
+    status.textContent = 'WORKING';
+
+    setTimeout(() => {
+      btn.textContent = 'DONE';
+      btn.classList.remove('generating');
+      btn.classList.add('done');
+      item.dataset.status = 'done';
+
+      const secs = Math.floor(Math.random() * 10 + 10);
+      status.textContent = secs + ' SEC';
+
+      // Add audio bar if missing
+      const center = item.querySelector('.item-center');
+      if (!center.querySelector('.audio-bar')) {
+        const audioBar = document.createElement('div');
+        audioBar.className = 'audio-bar';
+        audioBar.innerHTML = `
+          <button class="audio-play" onclick="togglePlay(${id}, event)">&#9654;</button>
+          <div class="waveform-mini" data-wf="${id}"></div>
+          <span class="audio-time">0:${secs}</span>
+        `;
+        center.appendChild(audioBar);
+        // Add waveform bars
+        const wf = audioBar.querySelector('.waveform-mini');
+        for (let i = 0; i < 45; i++) {
+          const bar = document.createElement('div');
+          bar.className = 'wf-bar' + (i < 18 ? ' active' : '');
+          bar.style.height = (Math.random() * 14 + 4) + 'px';
+          bar.style.animationDelay = (Math.random() * 0.8).toFixed(2) + 's';
+          wf.appendChild(bar);
+        }
+      }
+
+      updateStats();
+    }, 2000);
+  }
+
+  // ===== GENERATE ALL =====
+  function generateAll() {
+    const pending = document.querySelectorAll('.script-item[data-status="pending"]');
+    if (pending.length === 0) return;
+
+    const batchProgress = document.getElementById('batchProgress');
+    batchProgress.classList.add('show');
+
+    let completed = 0;
+    const total = pending.length;
+
+    pending.forEach((item, idx) => {
+      setTimeout(() => {
+        const id = item.dataset.id;
+        const btn = item.querySelector('.btn-gen');
+        const status = item.querySelector('.item-status');
+
+        btn.textContent = 'GEN...';
+        btn.classList.add('generating');
+
+        setTimeout(() => {
+          btn.textContent = 'DONE';
+          btn.classList.remove('generating');
+          btn.classList.add('done');
+          item.dataset.status = 'done';
+
+          const secs = Math.floor(Math.random() * 10 + 10);
+          status.textContent = secs + ' SEC';
+
+          const center = item.querySelector('.item-center');
+          if (!center.querySelector('.audio-bar')) {
+            const audioBar = document.createElement('div');
+            audioBar.className = 'audio-bar';
+            audioBar.innerHTML = `
+              <button class="audio-play" onclick="togglePlay(${id}, event)">&#9654;</button>
+              <div class="waveform-mini" data-wf="${id}"></div>
+              <span class="audio-time">0:${secs}</span>
+            `;
+            center.appendChild(audioBar);
+            const wf = audioBar.querySelector('.waveform-mini');
+            for (let i = 0; i < 45; i++) {
+              const bar = document.createElement('div');
+              bar.className = 'wf-bar' + (i < 18 ? ' active' : '');
+              bar.style.height = (Math.random() * 14 + 4) + 'px';
+              bar.style.animationDelay = (Math.random() * 0.8).toFixed(2) + 's';
+              wf.appendChild(bar);
+            }
+          }
+
+          completed++;
+          document.getElementById('batchText').textContent = `Generating ${completed}/${total}...`;
+          document.getElementById('batchFill').style.width = (completed / total * 100) + '%';
+
+          if (completed === total) {
+            setTimeout(() => {
+              batchProgress.classList.remove('show');
+              document.getElementById('batchText').textContent = '';
+              document.getElementById('batchFill').style.width = '0%';
+            }, 1000);
+          }
+
+          updateStats();
+        }, 1500);
+      }, idx * 2000);
+    });
+  }
+
+  // ===== ADD NEW LINE =====
+  function addNewLine() {
+    const list = document.getElementById('scriptList');
+    const count = list.children.length + 1;
+    const newItem = document.createElement('div');
+    newItem.className = 'script-item selected';
+    newItem.dataset.status = 'pending';
+    newItem.dataset.id = count;
+    newItem.innerHTML = `
+      <div class="item-left">
+        <div class="item-section">New Section</div>
+        <div class="item-label">SEC. ${String(count).padStart(2, '0')} // --:--</div>
+      </div>
+      <div class="item-center">
+        <textarea class="script-text-area" rows="2" placeholder="Enter script text here..."></textarea>
+      </div>
+      <div class="item-right">
+        <button class="btn-gen" onclick="generateSingle(${count}, event)">GENERATE</button>
+        <span class="item-status">NEW</span>
+        <div class="item-actions">
+          <button class="item-action-btn" onclick="editLine(${count}, event)">Edit</button>
+          <button class="item-action-btn delete" onclick="deleteLine(${count}, event)">Del</button>
+        </div>
+      </div>
+    `;
+
+    newItem.addEventListener('click', function(e) {
+      if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'BUTTON') return;
+      document.querySelectorAll('.script-item').forEach(i => { if (!i.classList.contains('playing')) i.classList.remove('selected'); });
+      if (!this.classList.contains('playing')) this.classList.add('selected');
+    });
+
+    // Deselect others
+    document.querySelectorAll('.script-item').forEach(i => i.classList.remove('selected'));
+    list.appendChild(newItem);
+    newItem.scrollIntoView({ behavior: 'smooth' });
+    updateStats();
+  }
+
+  // ===== DELETE LINE =====
+  function deleteLine(id, e) {
+    e.stopPropagation();
+    const item = document.querySelector(`.script-item[data-id="${id}"]`);
+    if (item) {
+      item.style.transition = 'all 0.3s';
+      item.style.opacity = '0';
+      item.style.maxHeight = '0';
+      item.style.overflow = 'hidden';
+      setTimeout(() => {
+        item.remove();
+        updateStats();
+      }, 300);
+    }
+  }
+
+  function editLine(id, e) {
+    e.stopPropagation();
+    const item = document.querySelector(`.script-item[data-id="${id}"]`);
+    const textarea = item.querySelector('.script-text-area');
+    textarea.focus();
+  }
+
+  // ===== UPDATE STATS =====
+  function updateStats() {
+    const all = document.querySelectorAll('.script-item');
+    const done = document.querySelectorAll('.script-item[data-status="done"]');
+    const total = all.length;
+    const doneCount = done.length;
+    const pct = total > 0 ? (doneCount / total * 100).toFixed(1) : 0;
+
+    document.getElementById('statLines').textContent = String(total).padStart(2, '0');
+    document.getElementById('statGenerated').textContent = `${String(doneCount).padStart(2, '0')} / ${String(total).padStart(2, '0')}`;
+    document.getElementById('statProgress').textContent = pct + '%';
+    document.getElementById('lineCount').textContent = `${total} lines // ~4:30 total`;
+  }
+
+  // ===== CHAT =====
+  const aiResponses = [
+    "I've refined the text to be more concise and impactful. Want me to adjust the tone further?",
+    "Here's a suggestion: Try adding a personal anecdote or rhetorical question to engage the audience more. Shall I draft one?",
+    "Good point! I've shortened the transition and made it more natural. The new version is about 10 seconds when spoken.",
+    "I recommend splitting this into two shorter lines for better pacing. Want me to do that?",
+    "I've added a callback to the previous speaker's topic to make the transition smoother. Take a look!",
+    "The closing remarks could use a stronger call-to-action. How about: 'Take what you've learned today and build something extraordinary. See you next year!'",
+  ];
+
+  let aiResponseIdx = 0;
+
+  function sendChat() {
+    const input = document.getElementById('chatInput');
+    const msg = input.value.trim();
+    if (!msg) return;
+
+    const messages = document.getElementById('chatMessages');
+
+    // Add user message
+    const userDiv = document.createElement('div');
+    userDiv.className = 'chat-msg user';
+    userDiv.innerHTML = `<div class="sender">You</div>${msg}`;
+    messages.insertBefore(userDiv, document.getElementById('typingIndicator'));
+
+    input.value = '';
+    messages.scrollTop = messages.scrollHeight;
+
+    // Show typing
+    document.getElementById('typingIndicator').classList.add('show');
+
+    // AI response after delay
+    setTimeout(() => {
+      document.getElementById('typingIndicator').classList.remove('show');
+
+      const aiDiv = document.createElement('div');
+      aiDiv.className = 'chat-msg ai';
+      aiDiv.innerHTML = `<div class="sender">AI Assistant</div>${aiResponses[aiResponseIdx % aiResponses.length]}`;
+      messages.insertBefore(aiDiv, document.getElementById('typingIndicator'));
+      messages.scrollTop = messages.scrollHeight;
+
+      aiResponseIdx++;
+    }, 1500 + Math.random() * 1000);
+  }
+</script>
+
+</body>
+</html>

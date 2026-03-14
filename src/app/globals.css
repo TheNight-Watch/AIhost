@@ -1,26 +1,137 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --mint: #98E4C9;
+  --cream: #FFF8E7;
+  --peach: #FFD4B8;
+  --teal: #2D6A5C;
+  --charcoal: #333;
+  --mint-light: #C8F0E2;
+  --mint-dark: #6BD4AF;
+  --window-bar: #E8E0D0;
+  --font-mono: 'IBM Plex Mono', 'Courier New', monospace;
+  --font-serif: 'DM Serif Display', serif;
+  --radius: 14px;
+  --error: #FF6B6B;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-mono);
+  background: var(--cream);
+  color: var(--charcoal);
+}
+
+@theme inline {
+  --color-mint: #98E4C9;
+  --color-cream: #FFF8E7;
+  --color-peach: #FFD4B8;
+  --color-teal: #2D6A5C;
+  --color-charcoal: #333;
+  --color-mint-light: #C8F0E2;
+  --color-mint-dark: #6BD4AF;
+  --color-window-bar: #E8E0D0;
+  --font-mono: 'IBM Plex Mono', 'Courier New', monospace;
+  --font-serif: 'DM Serif Display', serif;
+}
+
+/* Retro grid background utility */
+.retro-grid-bg {
+  background-image:
+    linear-gradient(rgba(45, 106, 92, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(45, 106, 92, 0.06) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* Window chrome */
+.retro-window {
+  border: 2px solid var(--charcoal);
+  border-radius: var(--radius);
+  background: var(--cream);
+  overflow: hidden;
+}
+
+.retro-window-bar {
+  background: var(--window-bar);
+  border-bottom: 2px solid var(--charcoal);
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+}
+
+/* 3D key button */
+.retro-btn {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: var(--mint);
+  color: var(--teal);
+  border: 2px solid var(--charcoal);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+  box-shadow: 0 4px 0 var(--teal), 0 6px 0 var(--charcoal);
+  position: relative;
+  top: 0;
+}
+
+.retro-btn:hover {
+  background: var(--mint-dark);
+  top: 1px;
+  box-shadow: 0 3px 0 var(--teal), 0 5px 0 var(--charcoal);
+}
+
+.retro-btn:active {
+  top: 4px;
+  box-shadow: 0 0px 0 var(--teal), 0 1px 0 var(--charcoal);
+}
+
+/* Dashed divider */
+.retro-divider {
+  border: none;
+  border-top: 2px dashed #ddd;
+}
+
+/* Blinking cursor */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.cursor-blink {
+  display: inline-block;
+  width: 8px;
+  height: 14px;
+  background: var(--teal);
+  margin-left: 4px;
+  vertical-align: middle;
+  animation: blink 1s infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@keyframes wave {
+  0%, 100% { height: 4px; }
+  50% { height: 16px; }
+}
+
+@keyframes livePulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
+}
+
+@keyframes currentPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(152, 228, 201, 0.4); }
+  50% { box-shadow: 0 0 0 4px rgba(152, 228, 201, 0.1); }
 }
