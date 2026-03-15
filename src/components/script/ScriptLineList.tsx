@@ -33,15 +33,7 @@ export default function ScriptLineList({
 }: Props) {
   const lineRefs = useRef<Map<number, HTMLDivElement>>(new Map());
 
-  // Auto-scroll to current broadcast line
-  useEffect(() => {
-    if (broadcastMode && broadcastIndex >= 0) {
-      const el = lineRefs.current.get(broadcastIndex);
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
-    }
-  }, [broadcastMode, broadcastIndex]);
+  // No auto-scroll — user controls scroll manually
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [batchGenerating, setBatchGenerating] = useState(false);
   const [batchProgress, setBatchProgress] = useState<string>("");

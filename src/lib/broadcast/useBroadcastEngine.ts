@@ -7,7 +7,7 @@ const ASR_PROXY_URL = process.env.NEXT_PUBLIC_ASR_PROXY_URL || "ws://localhost:8
 const WINDOW_SIZE = 8;
 const SILENCE_THRESHOLD_MS = 1000; // 1 second of silence required
 const SILENCE_CHECK_INTERVAL_MS = 500;
-const ENHANCE_CHAR_THRESHOLD = 400; // trigger enhance when transcript >= 400 chars
+const ENHANCE_CHAR_THRESHOLD = 50; // trigger enhance when transcript >= 50 chars
 
 export type BroadcastPhase =
   | "idle"
@@ -407,7 +407,7 @@ export function useBroadcastEngine(lines: ScriptLine[], enhanceMode: boolean, vo
           startAudioCapture(stream);
           startSilenceTimer(nextLineIndex);
           if (enhanceModeRef.current) {
-            addLog("[ENHANCE] Mode ON — will generate enhanced line at 400+ chars");
+            addLog("[ENHANCE] Mode ON — will generate enhanced line at 50+ chars");
           }
         } else if (msg.type === "asr_result") {
           handleASRResult(msg.data, nextLineIndex);

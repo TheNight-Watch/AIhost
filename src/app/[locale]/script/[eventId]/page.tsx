@@ -38,9 +38,15 @@ export default function ScriptPage({ params }: Props) {
     });
   }, [params]);
 
-  // Auto-scroll logs
+  // Auto-scroll logs within the log container only (don't scroll the whole page)
   useEffect(() => {
-    logsEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const el = logsEndRef.current;
+    if (el) {
+      const container = el.parentElement;
+      if (container) {
+        container.scrollTop = container.scrollHeight;
+      }
+    }
   }, [engine.logs]);
 
   async function loadData(loc: string, eid: string) {
