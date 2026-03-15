@@ -1,0 +1,30 @@
+import { NextResponse } from "next/server";
+import { textToSpeechBase64 } from "@/lib/doubao/tts";
+
+/**
+ * POST /api/tts-realtime
+ *
+ * Lightweight TTS endpoint for real-time use during broadcast.
+ * Returns base64 audio directly (no Supabase upload).
+ *
+ * Request: { text: string, voice_type?: string }
+ * Response: { audio_base64: string }
+ */
+export async function POST(request: Request) {
+  try {
+    const { text, voice_type } = await request.json();
+
+    if (!text) {
+      return NextResponse.json({ error: "text is required" }, { status: 400 });
+    }
+
+    const audioBase64 = await textToSpeechBase64(text, {
+      voice_type: voice_type || undefined,
+    });
+
+    return NextResponse.json({ audio_base64: audioBase64 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}

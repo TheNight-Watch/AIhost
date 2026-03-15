@@ -41,3 +41,6 @@ yarn-error.log*
 next-env.d.ts
 .claude/
 supabase/.temp/
+
+# ASR proxy (contains hardcoded credentials, deploy separately)
+asr-proxy.mjs

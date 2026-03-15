@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import type { ScriptLine } from "@/types";
 import ScriptLineItem from "./ScriptLineItem";
 
@@ -11,6 +11,11 @@ interface Props {
   onLinesUpdate: (lines: ScriptLine[]) => void;
   onLineSelect: (id: string | null) => void;
   selectedLineId: string | null;
+  broadcastMode?: boolean;
+  broadcastIndex?: number;
+  broadcastPhase?: string;
+  enhancedText?: string | null;
+  enhancedLineIndex?: number;
 }
 
 export default function ScriptLineList({
@@ -20,7 +25,23 @@ export default function ScriptLineList({
   onLinesUpdate,
   onLineSelect,
   selectedLineId,
+  broadcastMode,
+  broadcastIndex = -1,
+  broadcastPhase,
+  enhancedText,
+  enhancedLineIndex = -1,
 }: Props) {
+  const lineRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+
+  // Auto-scroll to current broadcast line
+  useEffect(() => {
+    if (broadcastMode && broadcastIndex >= 0) {
+      const el = lineRefs.current.get(broadcastIndex);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
+  }, [broadcastMode, broadcastIndex]);
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [batchGenerating, setBatchGenerating] = useState(false);
   const [batchProgress, setBatchProgress] = useState<string>("");
@@ -234,9 +255,21 @@ export default function ScriptLineList({
       ) : (
         <>
           {lines.map((line, i) => (
-            <div key={line.id}>
+            <div
+              key={line.id}
+              ref={(el) => { if (el) lineRefs.current.set(i, el); }}
+              style={broadcastMode ? {
+                borderLeft: i === broadcastIndex ? "4px solid" : "4px solid transparent",
+                borderLeftColor: i === broadcastIndex ? (broadcastPhase === "listening" ? "#FFD4B8" : "#98E4C9") : "transparent",
+                background: i === broadcastIndex ? "rgba(152, 228, 201, 0.08)" : i < broadcastIndex ? "rgba(0,0,0,0.02)" : "transparent",
+                opacity: i < broadcastIndex ? 0.5 : 1,
+                transition: "all 0.3s",
+              } : undefined}
+            >
               <ScriptLineItem
-                line={line}
+                line={broadcastMode && enhancedText && i === enhancedLineIndex
+                  ? { ...line, content: enhancedText }
+                  : line}
                 index={i}
                 isSelected={selectedLineId === line.id}
                 isPlaying={playingId === line.id}
@@ -244,37 +277,55 @@ export default function ScriptLineList({
                 onContentChange={handleContentChange}
                 onGenerateAudio={handleGenerateAudio}
                 onPlayPause={handlePlayPause}
-                onDelete={lines.length > 1 ? () => handleDeleteLine(line.id) : undefined}
+                onDelete={!broadcastMode && lines.length > 1 ? () => handleDeleteLine(line.id) : undefined}
               />
-              {/* Add line button between items */}
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  padding: "2px 0",
-                  background: "#FFFDF5",
-                  opacity: 0.4,
-                  transition: "opacity 0.2s",
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.4"; }}
-              >
-                <button
-                  onClick={() => handleAddLine(i)}
+              {/* Enhanced line indicator */}
+              {broadcastMode && enhancedText && i === enhancedLineIndex && (
+                <div style={{
+                  margin: "0 16px 8px",
+                  padding: "6px 12px",
+                  background: "linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(251, 191, 36, 0.05) 100%)",
+                  border: "1px solid rgba(251, 191, 36, 0.3)",
+                  borderRadius: "6px",
+                  fontSize: "10px",
+                  color: "#b45309",
+                  fontWeight: 600,
+                  letterSpacing: "0.05em",
+                }}>
+                  ENHANCED — AI generated transition based on guest speech
+                </div>
+              )}
+              {/* Add line button between items (hidden in broadcast mode) */}
+              {broadcastMode ? null : (
+                <div
                   style={{
-                    background: "transparent",
-                    border: "1px dashed #aaa",
-                    borderRadius: "4px",
-                    padding: "1px 12px",
-                    fontFamily: "var(--font-mono)",
-                    fontSize: "10px",
-                    color: "#aaa",
-                    cursor: "pointer",
+                    display: "flex",
+                    justifyContent: "center",
+                    padding: "2px 0",
+                    background: "#FFFDF5",
+                    opacity: 0.4,
+                    transition: "opacity 0.2s",
                   }}
+                  onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.4"; }}
                 >
-                  + insert line
-                </button>
-              </div>
+                  <button
+                    onClick={() => handleAddLine(i)}
+                    style={{
+                      background: "transparent",
+                      border: "1px dashed #aaa",
+                      borderRadius: "4px",
+                      padding: "1px 12px",
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "10px",
+                      color: "#aaa",
+                      cursor: "pointer",
+                    }}
+                  >
+                    + insert line
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </>

@@ -187,28 +187,6 @@ export default function EventCard({ event, locale }: Props) {
           >
             Voice
           </Link>
-          <Link
-            href={`/${locale}/broadcast/${event.id}`}
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              flex: 1,
-              textAlign: "center",
-              padding: "6px 12px",
-              fontFamily: "var(--font-mono)",
-              fontSize: "10px",
-              fontWeight: 700,
-              letterSpacing: "0.06em",
-              textTransform: "uppercase",
-              background: "#FFD4B8",
-              color: "#333",
-              border: "2px solid #333",
-              borderRadius: "8px",
-              textDecoration: "none",
-              transition: "all 0.2s",
-            }}
-          >
-            Broadcast
-          </Link>
         </div>
       </div>
     </div>
