@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AIhost -- Hackathon Pitch Deck</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --mint: #98E4C9;
+    --cream: #FFF8E7;
+    --peach: #FFD4B8;
+    --teal: #2D6A5C;
+    --teal-dark: #1F4F44;
+    --charcoal: #333;
+    --mint-light: #C8F0E2;
+    --mint-dark: #6BD4AF;
+    --window-bar: #E8E0D0;
+    --font-mono: 'IBM Plex Mono', 'Courier New', monospace;
+    --font-serif: 'DM Serif Display', serif;
+    --radius: 14px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+    scroll-snap-type: x mandatory;
+    overflow-y: hidden;
+  }
+
+  body {
+    font-family: var(--font-mono);
+    background: var(--cream);
+    color: var(--charcoal);
+    height: 100vh;
+    overflow-x: auto;
+    overflow-y: hidden;
+    display: flex;
+    scroll-snap-type: x mandatory;
+  }
+
+  /* ===== SLIDE BASE ===== */
+  .slide {
+    min-width: 100vw;
+    height: 100vh;
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 60px 80px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* retro grid background */
+  .slide::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(45, 106, 92, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(45, 106, 92, 0.05) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+  }
+
+  /* page number */
+  .slide-num {
+    position: absolute;
+    bottom: 24px;
+    right: 40px;
+    font-size: 13px;
+    color: var(--teal);
+    opacity: 0.5;
+    font-weight: 600;
+  }
+
+  /* ===== RETRO WINDOW COMPONENT ===== */
+  .retro-window {
+    border: 2.5px solid var(--charcoal);
+    border-radius: var(--radius);
+    background: var(--cream);
+    overflow: hidden;
+    box-shadow: 6px 6px 0 rgba(0,0,0,0.08);
+  }
+
+  .retro-window-bar {
+    background: var(--window-bar);
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    border-bottom: 2px solid var(--charcoal);
+  }
+
+  .retro-dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    border: 1.5px solid var(--charcoal);
+  }
+  .retro-dot.red { background: #FF6B6B; }
+  .retro-dot.yellow { background: #FFD93D; }
+  .retro-dot.green { background: var(--mint); }
+
+  .retro-window-title {
+    font-size: 11px;
+    font-weight: 600;
+    margin-left: 8px;
+    color: var(--charcoal);
+    opacity: 0.7;
+  }
+
+  .retro-window-body {
+    padding: 28px 32px;
+  }
+
+  /* ===== TYPOGRAPHY ===== */
+  .title-hero {
+    font-family: var(--font-serif);
+    font-size: 72px;
+    color: var(--teal);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+
+  .title-section {
+    font-family: var(--font-serif);
+    font-size: 44px;
+    color: var(--teal);
+    margin-bottom: 32px;
+    line-height: 1.2;
+  }
+
+  .subtitle {
+    font-size: 20px;
+    color: var(--teal);
+    font-weight: 500;
+    opacity: 0.8;
+    margin-top: 12px;
+  }
+
+  .body-text {
+    font-size: 16px;
+    line-height: 1.7;
+    color: var(--charcoal);
+    max-width: 700px;
+  }
+
+  .label-tag {
+    display: inline-block;
+    background: var(--mint);
+    color: var(--teal-dark);
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    border: 1.5px solid var(--teal);
+  }
+
+  .highlight {
+    background: var(--mint-light);
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+
+  .accent {
+    color: var(--teal);
+    font-weight: 700;
+  }
+
+  /* ===== CARDS ===== */
+  .card-grid {
+    display: grid;
+    gap: 20px;
+    width: 100%;
+    max-width: 1100px;
+  }
+
+  .card-grid-3 { grid-template-columns: repeat(3, 1fr); }
+  .card-grid-2 { grid-template-columns: repeat(2, 1fr); }
+
+  .card {
+    background: white;
+    border: 2px solid var(--charcoal);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: 4px 4px 0 rgba(0,0,0,0.06);
+    transition: transform 0.2s;
+  }
+
+  .card-icon {
+    font-size: 32px;
+    margin-bottom: 12px;
+  }
+
+  .card-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--teal);
+    margin-bottom: 8px;
+  }
+
+  .card-desc {
+    font-size: 13px;
+    line-height: 1.6;
+    color: #666;
+  }
+
+  .card-badge {
+    display: inline-block;
+    background: var(--peach);
+    color: var(--charcoal);
+    padding: 2px 10px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-top: 8px;
+    border: 1px solid var(--charcoal);
+  }
+
+  /* ===== FLOW DIAGRAM ===== */
+  .flow-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .flow-box {
+    background: white;
+    border: 2px solid var(--teal);
+    border-radius: 10px;
+    padding: 12px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--teal);
+    text-align: center;
+    min-width: 120px;
+  }
+
+  .flow-box.active {
+    background: var(--teal);
+    color: var(--cream);
+  }
+
+  .flow-arrow {
+    font-size: 20px;
+    color: var(--teal);
+    font-weight: 700;
+  }
+
+  /* ===== TIMELINE ===== */
+  .timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 700px;
+    width: 100%;
+  }
+
+  .timeline-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .timeline-dot {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--mint);
+    border: 2px solid var(--teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--teal);
+    flex-shrink: 0;
+  }
+
+  .timeline-content {
+    flex: 1;
+  }
+
+  .timeline-title {
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--teal);
+  }
+
+  .timeline-desc {
+    font-size: 13px;
+    color: #666;
+    margin-top: 4px;
+    line-height: 1.5;
+  }
+
+  /* ===== TECH STACK BADGES ===== */
+  .tech-stack {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+  }
+
+  .tech-badge {
+    background: var(--teal);
+    color: var(--cream);
+    padding: 6px 16px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 2px solid var(--teal-dark);
+  }
+
+  /* ===== SPECIFIC SLIDE STYLES ===== */
+
+  /* Slide 1: Cover */
+  .slide-cover {
+    background: var(--teal);
+    color: var(--cream);
+  }
+  .slide-cover::before {
+    background-image:
+      linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  .slide-cover .title-hero {
+    color: var(--mint);
+    font-size: 80px;
+  }
+  .slide-cover .subtitle {
+    color: var(--cream);
+    opacity: 0.9;
+    font-size: 24px;
+  }
+  .slide-cover .slide-num { color: var(--mint); }
+
+  .cover-tagline {
+    font-size: 18px;
+    color: var(--peach);
+    margin-top: 24px;
+    font-weight: 500;
+    padding: 8px 24px;
+    border: 2px solid var(--peach);
+    border-radius: 30px;
+  }
+
+  .cover-logo {
+    width: 80px;
+    height: 80px;
+    background: var(--mint);
+    border-radius: 16px;
+    border: 3px solid var(--cream);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  }
+
+  /* Slide 6: dark broadcast */
+  .slide-dark {
+    background: #1E1E1E;
+    color: var(--cream);
+  }
+  .slide-dark::before {
+    background-image:
+      linear-gradient(rgba(152, 228, 201, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(152, 228, 201, 0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  .slide-dark .title-section { color: var(--mint); }
+  .slide-dark .slide-num { color: var(--mint); }
+  .slide-dark .timeline-dot { background: var(--mint); }
+  .slide-dark .timeline-title { color: var(--mint); }
+  .slide-dark .timeline-desc { color: #aaa; }
+
+  /* Slide 8: end CTA */
+  .slide-end {
+    background: linear-gradient(135deg, var(--teal) 0%, var(--teal-dark) 100%);
+    color: var(--cream);
+  }
+  .slide-end::before {
+    background-image:
+      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  .slide-end .title-hero { color: var(--mint); font-size: 56px; }
+  .slide-end .slide-num { color: var(--mint); }
+
+  .cta-link {
+    display: inline-block;
+    background: var(--mint);
+    color: var(--teal-dark);
+    padding: 12px 32px;
+    border-radius: 30px;
+    font-size: 16px;
+    font-weight: 700;
+    text-decoration: none;
+    border: 2px solid var(--cream);
+    margin-top: 24px;
+    transition: transform 0.2s;
+  }
+  .cta-link:hover { transform: scale(1.05); }
+
+  /* ===== PRODUCT EMBED ===== */
+  .product-frame {
+    width: 100%;
+    max-width: 900px;
+    border: 3px solid var(--charcoal);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: 8px 8px 0 rgba(0,0,0,0.08);
+  }
+
+  .product-frame-bar {
+    background: var(--window-bar);
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    border-bottom: 2px solid var(--charcoal);
+    font-size: 12px;
+  }
+
+  .product-url-bar {
+    flex: 1;
+    background: white;
+    border: 1.5px solid #ccc;
+    border-radius: 6px;
+    padding: 4px 12px;
+    font-size: 11px;
+    color: #666;
+    margin-left: 12px;
+  }
+
+  .product-screenshots {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    background: #f5f5f0;
+  }
+
+  .product-screen {
+    aspect-ratio: 16/10;
+    background: var(--cream);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-right: 1px solid #ddd;
+    padding: 16px;
+    position: relative;
+  }
+  .product-screen:last-child { border-right: none; }
+
+  .screen-label {
+    position: absolute;
+    top: 8px;
+    left: 12px;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--teal);
+    opacity: 0.6;
+  }
+
+  .screen-mock {
+    width: 85%;
+    height: 60%;
+    background: white;
+    border: 1.5px solid #ddd;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    padding: 8px;
+    gap: 4px;
+  }
+
+  .mock-bar {
+    height: 6px;
+    background: var(--mint);
+    border-radius: 3px;
+    width: 60%;
+  }
+  .mock-line {
+    height: 4px;
+    background: #e8e8e8;
+    border-radius: 2px;
+  }
+  .mock-line.w80 { width: 80%; }
+  .mock-line.w60 { width: 60%; }
+  .mock-line.w40 { width: 40%; }
+  .mock-btn {
+    margin-top: auto;
+    height: 12px;
+    background: var(--teal);
+    border-radius: 4px;
+    width: 50%;
+    align-self: center;
+  }
+
+  .screen-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--charcoal);
+    margin-top: 8px;
+  }
+
+  /* ===== NAV HINT ===== */
+  .nav-hint {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(45, 106, 92, 0.9);
+    color: var(--cream);
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    opacity: 0.7;
+    z-index: 100;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+
+  /* ===== PROGRESS BAR ===== */
+  .progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 4px;
+    background: var(--mint);
+    z-index: 200;
+    transition: width 0.3s ease;
+  }
+
+  /* ===== ANIMATIONS ===== */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .slide.active .animate-in {
+    animation: fadeInUp 0.6s ease forwards;
+  }
+  .animate-in { opacity: 0; }
+  .delay-1 { animation-delay: 0.1s !important; }
+  .delay-2 { animation-delay: 0.2s !important; }
+  .delay-3 { animation-delay: 0.3s !important; }
+  .delay-4 { animation-delay: 0.4s !important; }
+  .delay-5 { animation-delay: 0.5s !important; }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+  .cursor-blink::after {
+    content: '_';
+    animation: blink 1s infinite;
+    color: var(--mint);
+  }
+
+  /* ===== PIPELINE DIAGRAM ===== */
+  .pipeline {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    width: 100%;
+    max-width: 900px;
+  }
+
+  .pipeline-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+  }
+
+  .pipeline-box {
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    border: 2px solid;
+    min-width: 110px;
+  }
+
+  .pipe-user { background: var(--peach); border-color: #E8A080; color: var(--charcoal); }
+  .pipe-ai { background: var(--mint); border-color: var(--teal); color: var(--teal-dark); }
+  .pipe-core { background: var(--teal); border-color: var(--teal-dark); color: var(--cream); }
+  .pipe-output { background: #FFD93D; border-color: #D4B030; color: var(--charcoal); }
+
+  .pipe-arrow { font-size: 18px; color: var(--teal); font-weight: 700; }
+  .pipe-arrow-down {
+    font-size: 18px;
+    color: var(--teal);
+    font-weight: 700;
+    text-align: center;
+  }
+
+  .pipeline-label {
+    font-size: 11px;
+    color: #999;
+    font-weight: 600;
+    text-align: center;
+    letter-spacing: 0.1em;
+  }
+
+  /* ===== SPREAD MECHANISM ===== */
+  .spread-flow {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    max-width: 1000px;
+    width: 100%;
+  }
+
+  .spread-col {
+    flex: 1;
+    padding: 20px;
+    text-align: center;
+    position: relative;
+  }
+
+  .spread-col:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 20%;
+    height: 60%;
+    width: 2px;
+    background: linear-gradient(to bottom, transparent, var(--mint), transparent);
+  }
+
+  .spread-icon { font-size: 36px; margin-bottom: 10px; }
+  .spread-title { font-size: 14px; font-weight: 700; color: var(--teal); margin-bottom: 6px; }
+  .spread-desc { font-size: 12px; color: #666; line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<!-- Progress Bar -->
+<div class="progress-bar" id="progressBar"></div>
+
+<!-- Nav Hint -->
+<div class="nav-hint" id="navHint">← → or click to navigate</div>
+
+<!-- ========== SLIDE 1: COVER ========== -->
+<section class="slide slide-cover" id="slide-1">
+  <img src="logo.png" alt="AIhost Logo" class="animate-in" style="width: 120px; height: 120px; border-radius: 20px; object-fit: cover; box-shadow: 0 4px 24px rgba(0,0,0,0.3); margin-bottom: 12px;">
+  <h1 class="title-hero animate-in delay-1">AIhost</h1>
+  <p class="subtitle animate-in delay-2">Your AI Event Host / AI 活动主持人</p>
+  <div class="cover-tagline animate-in delay-3">
+    用 AI 做活动主持人，解放人类
+  </div>
+  <div style="margin-top: 40px; font-size: 14px; opacity: 0.6;" class="animate-in delay-4">
+    OpenClaw Hackathon 2026
+  </div>
+  <span class="slide-num">01 / 09</span>
+</section>
+
+<!-- ========== SLIDE 2: ABOUT ME ========== -->
+<section class="slide" id="slide-2" style="padding: 40px 80px;">
+  <span class="label-tag animate-in" style="font-size: 16px; padding: 8px 22px;">ABOUT ME</span>
+  <h2 class="title-section animate-in delay-1" style="margin-top: 12px; margin-bottom: 28px; font-size: 56px;">Hi, I'm 刘海丰</h2>
+
+  <div style="display: flex; gap: 48px; max-width: 1400px; width: 100%; align-items: stretch;" class="animate-in delay-2">
+    <!-- Left: Identity -->
+    <div class="retro-window" style="flex: 5;">
+      <div class="retro-window-bar">
+        <div class="retro-dot red"></div>
+        <div class="retro-dot yellow"></div>
+        <div class="retro-dot green"></div>
+        <span class="retro-window-title" style="font-size: 14px;">whoami.sh</span>
+      </div>
+      <div class="retro-window-body" style="font-size: 22px; line-height: 2; padding: 36px 40px;">
+        <p><span class="accent" style="font-size: 24px;">$ whoami</span></p>
+        <p style="margin-left: 20px;">清华智能工程 21 级 | 自动化 + 设计</p>
+        <p style="margin-left: 20px; color: var(--teal); font-weight: 700; font-size: 23px;">能写代码的产品人</p>
+        <p style="margin-left: 20px;">Loves to <span class="highlight" style="font-size: 24px; padding: 4px 10px;">design</span> and <span class="highlight" style="font-size: 24px; padding: 4px 10px;">build things</span></p>
+        <div style="height: 12px;"></div>
+        <p><span class="accent" style="font-size: 24px;">$ cat goal.md</span></p>
+        <p style="margin-left: 20px; font-size: 20px;">如果 28 年实现 genius in the data center,</p>
+        <p style="margin-left: 20px; font-size: 20px;">希望在此之前<span style="color: var(--teal); font-weight: 700; font-size: 24px;">推波助澜一下</span></p>
+      </div>
+    </div>
+
+    <!-- Right: Track Record -->
+    <div style="flex: 6; display: flex; flex-direction: column; gap: 20px;">
+      <div class="card" style="padding: 28px 32px; flex: 1;">
+        <div class="card-title" style="font-size: 24px; margin-bottom: 12px;">🎯 折腾过的事</div>
+        <div class="card-desc" style="font-size: 20px; line-height: 1.9; color: #444;">
+          前清华创协主席，主办昆山杯、清醒杯<br>
+          发起清华<strong style="color: var(--teal);">第一场大模型黑客松</strong>（真格基金赞助）<br>
+          联合 waytoAGI 办 AI 实训营，<strong style="color: var(--teal);">1000+</strong> 同学参与<br>
+          只身赴深圳创业 — AI+儿童绘画出海（李泽湘投资）
+        </div>
+      </div>
+      <div class="card" style="padding: 28px 32px; background: var(--mint-light); border-color: var(--teal);">
+        <div class="card-title" style="font-size: 24px; margin-bottom: 12px;">🏆 一些记录</div>
+        <div class="card-desc" style="font-size: 20px; line-height: 1.9; color: #444;">
+          抖音创变者大赛全国银奖 / AdventureX 多智能体第一<br>
+          国创金奖 / 中欧商业评论发表文章
+        </div>
+      </div>
+      <div style="display: flex; gap: 18px; font-size: 18px;">
+        <a href="https://www.xiaohongshu.com/user/profile/62275105000000001000d07a" target="_blank" style="background: var(--peach); border: 2.5px solid var(--charcoal); border-radius: 12px; padding: 14px 28px; text-decoration: none; color: var(--charcoal); font-weight: 700;">📕 小红书</a>
+        <a href="https://github.com/TheNight-Watch" target="_blank" style="background: white; border: 2.5px solid var(--charcoal); border-radius: 12px; padding: 14px 28px; text-decoration: none; color: var(--charcoal); font-weight: 700;">💻 GitHub</a>
+      </div>
+    </div>
+  </div>
+
+  <span class="slide-num">02 / 09</span>
+</section>
+
+<!-- ========== SLIDE 3: PAIN POINT ========== -->
+<section class="slide" id="slide-3">
+  <span class="label-tag animate-in">ORIGIN STORY</span>
+  <h2 class="title-section animate-in delay-1" style="margin-top: 16px;">需求从哪来?</h2>
+
+  <div class="retro-window animate-in delay-2" style="max-width: 800px; width: 100%;">
+    <div class="retro-window-bar">
+      <div class="retro-dot red"></div>
+      <div class="retro-dot yellow"></div>
+      <div class="retro-dot green"></div>
+      <span class="retro-window-title">terminal -- my_story.sh</span>
+    </div>
+    <div class="retro-window-body" style="font-size: 15px; line-height: 2;">
+      <p><span class="accent">$ whoami</span></p>
+      <p style="margin-left: 16px;">学生协会负责人，每学期办很多线下活动</p>
+      <br>
+      <p><span class="accent">$ cat pain_points.log</span></p>
+      <p style="margin-left: 16px; color: #FF6B6B;">[COST] 请专业主持人 --> 贵</p>
+      <p style="margin-left: 16px; color: #FF6B6B;">[TIME] 自己主持 2-3 小时绑在台前</p>
+      <p style="margin-left: 16px; color: #FF6B6B;">[WASTE] 每隔 10-20 分钟才说一句口播，无法专心听嘉宾分享</p>
+      <br>
+      <p><span class="accent">$ trigger_event</span></p>
+      <p style="margin-left: 16px;">昨天上午参加两场活动，看到主持人在台上口播台词</p>
+      <p style="margin-left: 16px;">联想到自己做社团的经历，思考：</p>
+      <p style="margin-left: 16px;">为什么不能用 AI 把整个主持工作重新做一遍?<span class="cursor-blink"></span></p>
+    </div>
+  </div>
+
+  <span class="slide-num">03 / 09</span>
+</section>
+
+<!-- ========== SLIDE 4: CREATIVE SYSTEM ========== -->
+<section class="slide" id="slide-4">
+  <span class="label-tag animate-in">CREATIVE SYSTEM DESIGN</span>
+  <h2 class="title-section animate-in delay-1" style="margin-top: 16px;">创意系统设计</h2>
+
+  <p class="body-text animate-in delay-2" style="text-align: center; font-weight: 600; color: var(--teal); font-size: 18px; margin-bottom: 24px;">
+    用 AI 赋能主持，解放人力
+  </p>
+
+  <div class="card-grid card-grid-3 animate-in delay-3">
+    <div class="card">
+      <div class="card-icon">&#x1F4C4;</div>
+      <div class="card-title">智能主持稿生成</div>
+      <div class="card-desc">
+        <strong style="color: var(--teal);">A. 上传流程文档</strong><br>
+        上传大致的活动流程图，AI 自动生成完整主持稿<br><br>
+        <strong style="color: var(--teal);">B. 上传现有主持稿</strong><br>
+        直接上传已有主持稿，系统自动拆分并生成结构化稿件
+      </div>
+      <span class="card-badge">过去 1-2h 写稿 --> 现在 30s</span>
+    </div>
+    <div class="card">
+      <div class="card-icon">&#x1F50A;</div>
+      <div class="card-title">AI 语音播报</div>
+      <div class="card-desc">
+        多种 AI 音色可选，一键按流程自动播出。主持人不用绑在台前。<br><br>
+        设好脚本，AI 自动按流程播报
+      </div>
+      <span class="card-badge">解决: 人绑在台前</span>
+    </div>
+    <div class="card" style="border-color: var(--teal); background: var(--mint-light);">
+      <div class="card-icon">&#x2728;</div>
+      <div class="card-title">Enhance Mode</div>
+      <div class="card-desc">
+        <strong style="color: var(--teal);">A. 自动口播，无需人工</strong><br>
+        ASR 实时监听嘉宾发言，自动播报<br>
+        No Human in the Loop<br><br>
+        <strong style="color: var(--teal);">B. 追踪关键观点</strong><br>
+        自动提取嘉宾核心观点，生成个性化过渡口播
+      </div>
+      <span class="card-badge" style="background: var(--mint); border-color: var(--teal);">核心创新</span>
+    </div>
+  </div>
+
+  <p class="body-text animate-in delay-4" style="text-align: center; margin-top: 20px; font-weight: 600; color: var(--teal);">
+    让主持人从"绑在台前"变成"坐在台下专心听"
+  </p>
+
+  <span class="slide-num">04 / 09</span>
+</section>
+
+<!-- ========== SLIDE 5: PRODUCT DEMO ========== -->
+<section class="slide" id="slide-5">
+  <span class="label-tag animate-in">PRODUCT DEMO</span>
+  <h2 class="title-section animate-in delay-1" style="margin-top: 16px;">产品演示</h2>
+
+  <div class="product-frame animate-in delay-2">
+    <div class="product-frame-bar">
+      <div class="retro-dot red"></div>
+      <div class="retro-dot yellow"></div>
+      <div class="retro-dot green"></div>
+      <div class="product-url-bar">https://aihost-three.vercel.app</div>
+    </div>
+    <div class="product-screenshots">
+      <div class="product-screen">
+        <span class="screen-label">STEP 01</span>
+        <div class="screen-mock">
+          <div class="mock-bar" style="width: 40%;"></div>
+          <div style="margin-top: 8px;">
+            <div class="mock-line w80"></div>
+            <div class="mock-line w60" style="margin-top: 4px;"></div>
+          </div>
+          <div class="mock-btn"></div>
+        </div>
+        <div class="screen-title">创建活动 & 上传文档</div>
+      </div>
+      <div class="product-screen">
+        <span class="screen-label">STEP 02</span>
+        <div class="screen-mock">
+          <div class="mock-bar" style="width: 70%;"></div>
+          <div style="margin-top: 6px;">
+            <div class="mock-line w80"></div>
+            <div class="mock-line w60" style="margin-top: 3px;"></div>
+            <div class="mock-line w80" style="margin-top: 3px;"></div>
+            <div class="mock-line w40" style="margin-top: 3px;"></div>
+          </div>
+          <div class="mock-btn" style="background: var(--mint-dark);"></div>
+        </div>
+        <div class="screen-title">AI 生成脚本 & 编辑</div>
+      </div>
+      <div class="product-screen">
+        <span class="screen-label">STEP 03</span>
+        <div class="screen-mock" style="background: #1E1E1E; border-color: #444;">
+          <div class="mock-bar" style="background: var(--mint); width: 50%;"></div>
+          <div style="margin-top: 6px;">
+            <div class="mock-line" style="background: #444; width: 80%;"></div>
+            <div class="mock-line" style="background: #444; width: 60%; margin-top: 3px;"></div>
+          </div>
+          <div class="mock-btn" style="background: #FF6B6B;"></div>
+        </div>
+        <div class="screen-title">实时播报控制台</div>
+      </div>
+    </div>
+  </div>
+
+  <a href="https://aihost-three.vercel.app" target="_blank" class="cta-link animate-in delay-3" style="background: var(--teal); color: var(--cream); border-color: var(--teal-dark); margin-top: 20px;">
+    Try it live --> aihost-three.vercel.app
+  </a>
+
+  <span class="slide-num">05 / 09</span>
+</section>
+
+<!-- ========== SLIDE 6: TECH ARCHITECTURE ========== -->
+<section class="slide" id="slide-6">
+  <span class="label-tag animate-in">TECH ARCHITECTURE</span>
+  <h2 class="title-section animate-in delay-1" style="margin-top: 16px;">AI 技术整合</h2>
+
+  <div class="pipeline animate-in delay-2">
+    <div class="pipeline-label">--- SCRIPT GENERATION PIPELINE ---</div>
+    <div class="pipeline-row">
+      <div class="pipeline-box pipe-user">用户上传文档<br><small>PDF / Word</small></div>
+      <span class="pipe-arrow">--></span>
+      <div class="pipeline-box pipe-ai">豆包大模型<br><small>脚本生成</small></div>
+      <span class="pipe-arrow">--></span>
+      <div class="pipeline-box pipe-core">脚本编辑器<br><small>AI Chat 优化</small></div>
+      <span class="pipe-arrow">--></span>
+      <div class="pipeline-box pipe-output">TTS 音频<br><small>豆包 TTS 2.0</small></div>
+    </div>
+
+    <div style="height: 8px;"></div>
+    <div class="pipeline-label">--- ENHANCE MODE: REAL-TIME PIPELINE ---</div>
+    <div class="pipeline-row">
+      <div class="pipeline-box pipe-user">嘉宾发言<br><small>麦克风输入</small></div>
+      <span class="pipe-arrow">--></span>
+      <div class="pipeline-box pipe-ai">ASR 语音识别<br><small>实时转写</small></div>
+      <span class="pipe-arrow">--></span>
+      <div class="pipeline-box pipe-core" style="background: #FF6B6B; border-color: #D44; color: white;">LLM 判断<br><small>发言结束检测</small></div>
+      <span class="pipe-arrow">--></span>
+      <div class="pipeline-box pipe-ai">生成过渡语<br><small>上下文感知</small></div>
+      <span class="pipe-arrow">--></span>
+      <div class="pipeline-box pipe-output">自动播出<br><small>无缝衔接</small></div>
+    </div>
+  </div>
+
+  <div class="tech-stack animate-in delay-3">
+    <span class="tech-badge">Next.js 16</span>
+    <span class="tech-badge">TypeScript</span>
+    <span class="tech-badge">Supabase</span>
+    <span class="tech-badge">豆包大模型</span>
+    <span class="tech-badge">豆包 TTS 2.0</span>
+    <span class="tech-badge">Web Audio API</span>
+    <span class="tech-badge" style="background: var(--peach); color: var(--charcoal); border-color: #E8A080;">NLP + 语音 + 实时系统</span>
+  </div>
+
+  <span class="slide-num">06 / 09</span>
+</section>
+
+<!-- ========== SLIDE 7: USE CASE (DARK) ========== -->
+<section class="slide slide-dark" id="slide-7">
+  <span class="label-tag animate-in" style="background: var(--teal); color: var(--mint); border-color: var(--mint);">LIVE SCENARIO</span>
+  <h2 class="title-section animate-in delay-1" style="margin-top: 16px;">传播机制与活动场景</h2>
+
+  <div class="timeline animate-in delay-2">
+    <div class="timeline-item">
+      <div class="timeline-dot">1</div>
+      <div class="timeline-content">
+        <div class="timeline-title">嘉宾上场前</div>
+        <div class="timeline-desc">AIhost 自动播报: "接下来有请 XXX 为我们分享..."<br>主持人无需到台前，AI 完成引导</div>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-dot">2</div>
+      <div class="timeline-content">
+        <div class="timeline-title">嘉宾分享中</div>
+        <div class="timeline-desc">主持人解放，坐在台下专心听讲、做笔记<br>ASR 持续监听，随时待命</div>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-dot">3</div>
+      <div class="timeline-content">
+        <div class="timeline-title">嘉宾讲完</div>
+        <div class="timeline-desc">Enhance Mode: AI 自动识别发言结束<br>播报 "感谢 XXX 的精彩分享，下一位嘉宾是..."</div>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-dot">4</div>
+      <div class="timeline-content">
+        <div class="timeline-title">活动全流程自动化</div>
+        <div class="timeline-desc">开场白 --> 嘉宾介绍 --> 过渡衔接 --> 结束语<br>一整场活动，零人工主持干预</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top: 24px; display: flex; gap: 24px; align-items: center;" class="animate-in delay-3">
+    <div style="text-align: center;">
+      <div style="font-size: 32px; font-weight: 700; color: var(--mint);">2-3h</div>
+      <div style="font-size: 11px; color: #888;">主持人解放时间</div>
+    </div>
+    <div style="font-size: 24px; color: var(--mint);">|</div>
+    <div style="text-align: center;">
+      <div style="font-size: 32px; font-weight: 700; color: var(--mint);">30s</div>
+      <div style="font-size: 11px; color: #888;">脚本生成时间</div>
+    </div>
+    <div style="font-size: 24px; color: var(--mint);">|</div>
+    <div style="text-align: center;">
+      <div style="font-size: 32px; font-weight: 700; color: var(--mint);">0</div>
+      <div style="font-size: 11px; color: #888;">人工播报次数</div>
+    </div>
+  </div>
+
+  <span class="slide-num">07 / 09</span>
+</section>
+
+<!-- ========== SLIDE 8: FUTURE ========== -->
+<section class="slide" id="slide-8">
+  <span class="label-tag animate-in">FUTURE ROADMAP</span>
+  <h2 class="title-section animate-in delay-1" style="margin-top: 16px;">未来规划</h2>
+
+  <div class="card-grid card-grid-3 animate-in delay-2">
+    <div class="card" style="text-align: center;">
+      <div class="card-icon">&#x1F30D;</div>
+      <div class="card-title">多语言支持</div>
+      <div class="card-desc">国际会议场景<br>实时翻译 + 多语种播报</div>
+    </div>
+    <div class="card" style="text-align: center;">
+      <div class="card-icon">&#x1F4AC;</div>
+      <div class="card-title">观众互动</div>
+      <div class="card-desc">弹幕 / 投票 / Q&A<br>AI 主持人实时回应</div>
+    </div>
+    <div class="card" style="text-align: center;">
+      <div class="card-icon">&#x2601;</div>
+      <div class="card-title">SaaS 化</div>
+      <div class="card-desc">开放给所有活动主办方<br>按场次 / 按月订阅</div>
+    </div>
+  </div>
+
+  <span class="slide-num">08 / 09</span>
+</section>
+
+<!-- ========== SLIDE 9: OPENCLAW + END ========== -->
+<section class="slide slide-end" id="slide-9">
+  <span class="label-tag animate-in" style="background: var(--mint); color: var(--teal-dark); border-color: var(--cream);">OPENCLAW INTEGRATION</span>
+  <h2 class="title-hero animate-in delay-1" style="margin-top: 16px;">AIhost x OpenClaw</h2>
+
+  <div class="retro-window animate-in delay-2" style="max-width: 600px; width: 100%; margin-top: 20px;">
+    <div class="retro-window-bar" style="background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.2);">
+      <div class="retro-dot red"></div>
+      <div class="retro-dot yellow"></div>
+      <div class="retro-dot green"></div>
+      <span class="retro-window-title" style="color: var(--cream);">openclaw-chat</span>
+    </div>
+    <div class="retro-window-body" style="background: rgba(0,0,0,0.3); font-size: 14px; line-height: 2;">
+      <p style="color: var(--peach);">> "帮我主持今天下午的 OpenClaw Meetup"</p>
+      <p style="color: var(--mint);">AIhost Skill activated...</p>
+      <p style="color: var(--mint);">Loading event script... Done.</p>
+      <p style="color: var(--mint);">Broadcasting started.<span class="cursor-blink"></span></p>
+    </div>
+  </div>
+
+  <p class="animate-in delay-3" style="font-size: 16px; margin-top: 16px; opacity: 0.8; max-width: 500px; text-align: center; line-height: 1.7;">
+    AIhost 可作为 OpenClaw 的活动主持 Skill<br>
+    OpenClaw 用户一句话即可启动 AI 主持
+  </p>
+
+  <a href="https://aihost-three.vercel.app" target="_blank" class="cta-link animate-in delay-4">
+    aihost-three.vercel.app
+  </a>
+
+  <p class="animate-in delay-5" style="margin-top: 40px; font-size: 13px; opacity: 0.5;">
+    Thank you!
+  </p>
+
+  <span class="slide-num">09 / 09</span>
+</section>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const totalSlides = slides.length;
+  let currentSlide = 0;
+
+  // Mark first slide as active
+  slides[0].classList.add('active');
+
+  function goToSlide(index) {
+    if (index < 0 || index >= totalSlides) return;
+    currentSlide = index;
+    slides[index].scrollIntoView({ behavior: 'smooth', inline: 'start' });
+    slides.forEach(s => s.classList.remove('active'));
+    slides[index].classList.add('active');
+    updateProgress();
+  }
+
+  function updateProgress() {
+    const pct = ((currentSlide + 1) / totalSlides) * 100;
+    document.getElementById('progressBar').style.width = pct + '%';
+  }
+
+  // Keyboard navigation
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
+      e.preventDefault();
+      goToSlide(currentSlide + 1);
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      goToSlide(currentSlide - 1);
+    }
+  });
+
+  // Click navigation (left half = prev, right half = next)
+  document.addEventListener('click', (e) => {
+    if (e.target.tagName === 'A') return;
+    if (e.clientX > window.innerWidth / 2) {
+      goToSlide(currentSlide + 1);
+    } else {
+      goToSlide(currentSlide - 1);
+    }
+  });
+
+  // Scroll snap detection
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const idx = Array.from(slides).indexOf(entry.target);
+        currentSlide = idx;
+        slides.forEach(s => s.classList.remove('active'));
+        entry.target.classList.add('active');
+        updateProgress();
+      }
+    });
+  }, { threshold: 0.6 });
+
+  slides.forEach(s => observer.observe(s));
+
+  // Hide nav hint after 5s
+  setTimeout(() => {
+    document.getElementById('navHint').style.opacity = '0';
+  }, 5000);
+
+  // Init
+  updateProgress();
+</script>
+
+</body>
+</html>
