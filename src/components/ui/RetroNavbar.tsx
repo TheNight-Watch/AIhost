@@ -71,18 +71,7 @@ export default function RetroNavbar({ locale, userEmail, activeLink, voiceLabel,
           textDecoration: "none",
         }}
       >
-        <span
-          style={{
-            display: "inline-block",
-            width: "18px",
-            height: "18px",
-            borderRadius: "4px",
-            borderWidth: "2px",
-            borderStyle: "solid",
-            background: "#98E4C9",
-            borderColor: "#FFF8E7",
-          }}
-        />
+        <img src="/logo.png" alt="AI Host" style={{ width: "24px", height: "24px", borderRadius: "4px" }} />
         AI Host
       </Link>
 

@@ -39,6 +39,8 @@ export default function EventUploadForm({ locale, userId }: Props) {
   const [description, setDescription] = useState("");
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [isParsingDoc, setIsParsingDoc] = useState(false);
+  const [docFileName, setDocFileName] = useState<string | null>(null);
 
   // Mode: "extract" = user has complete MC script, "generate" = user has agenda/flowchart
   const [mode, setMode] = useState<"extract" | "generate">("extract");
@@ -66,9 +68,65 @@ export default function EventUploadForm({ locale, userId }: Props) {
     [setAgendaImageBase64]
   );
 
+  const onDropDoc = useCallback(
+    async (acceptedFiles: File[]) => {
+      const file = acceptedFiles[0];
+      if (!file) return;
+
+      setIsParsingDoc(true);
+      setDocFileName(file.name);
+      setError("");
+
+      try {
+        // Read file as base64
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            const result = reader.result as string;
+            // Remove data URL prefix (data:application/...;base64,)
+            const base64Data = result.split(",")[1];
+            resolve(base64Data);
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+
+        const response = await fetch("/api/parse-doc", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fileBase64: base64, fileName: file.name }),
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          setError(data.error || "Failed to parse document");
+          return;
+        }
+
+        setAgendaText(data.text);
+        setMode("extract");
+      } catch {
+        setError("Failed to parse document file");
+      } finally {
+        setIsParsingDoc(false);
+      }
+    },
+    [setAgendaText]
+  );
+
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: { "image/jpeg": [".jpg", ".jpeg"], "image/png": [".png"] },
+    maxFiles: 1,
+    multiple: false,
+  });
+
+  const { getRootProps: getDocRootProps, getInputProps: getDocInputProps, isDragActive: isDocDragActive } = useDropzone({
+    onDrop: onDropDoc,
+    accept: {
+      "application/msword": [".doc"],
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
+    },
     maxFiles: 1,
     multiple: false,
   });
@@ -526,6 +584,59 @@ export default function EventUploadForm({ locale, userId }: Props) {
                     <div style={{ fontSize: "28px", marginBottom: "6px" }}>&#128247;</div>
                     <p style={{ fontSize: "11px", color: "#666" }}>{t("upload.dropzoneText", locale)}</p>
                     <p style={{ fontSize: "10px", marginTop: "4px", color: "#aaa" }}>{t("upload.dropzoneHint", locale)}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Doc upload */}
+              <div>
+                <label style={{ display: "block", fontSize: "10px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "8px", color: "#2D6A5C" }}>
+                  Upload .doc / .docx File
+                </label>
+                {docFileName ? (
+                  <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "12px 14px",
+                    borderRadius: "10px",
+                    border: "2px solid #2D6A5C",
+                    background: "#C8F0E2",
+                  }}>
+                    <span style={{ fontSize: "12px", color: "#2D6A5C", fontWeight: 600 }}>
+                      {isParsingDoc ? "Parsing..." : `\u2713 ${docFileName}`}
+                    </span>
+                    <button
+                      onClick={() => { setDocFileName(null); }}
+                      style={{
+                        background: "transparent",
+                        border: "none",
+                        fontSize: "14px",
+                        color: "#999",
+                        cursor: "pointer",
+                      }}
+                    >
+                      &times;
+                    </button>
+                  </div>
+                ) : (
+                  <div
+                    {...getDocRootProps()}
+                    style={{
+                      padding: "16px",
+                      textAlign: "center",
+                      cursor: "pointer",
+                      borderRadius: "10px",
+                      border: `2px dashed ${isDocDragActive ? "#2D6A5C" : "#bbb"}`,
+                      background: isDocDragActive ? "#C8F0E2" : "#FFFDF5",
+                      transition: "all 0.2s",
+                    }}
+                  >
+                    <input {...getDocInputProps()} />
+                    <div style={{ fontSize: "24px", marginBottom: "4px" }}>&#128196;</div>
+                    <p style={{ fontSize: "11px", color: "#666" }}>
+                      Drop .doc/.docx file here or click to browse
+                    </p>
                   </div>
                 )}
               </div>

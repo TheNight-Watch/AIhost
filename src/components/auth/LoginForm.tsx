@@ -122,34 +122,7 @@ export default function LoginForm({ locale, initialMode = "login" }: Props) {
       <div style={{ position: "relative", zIndex: 10, width: "100%", maxWidth: 460, padding: "0 20px" }}>
         {/* Logo */}
         <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: 64,
-              height: 64,
-              borderRadius: 16,
-              border: "3px solid #333",
-              background: "#2D6A5C",
-              position: "relative",
-              marginBottom: 16,
-            }}
-          >
-            <span style={{ width: 24, height: 24, borderRadius: 6, border: "2px solid #FFF8E7", background: "#98E4C9" }} />
-            <span
-              style={{
-                position: "absolute",
-                bottom: -3,
-                right: -3,
-                width: 16,
-                height: 16,
-                borderRadius: 4,
-                border: "2px solid #333",
-                background: "#FFD4B8",
-              }}
-            />
-          </div>
+          <img src="/logo.png" alt="AI Host" style={{ width: 72, height: 72, borderRadius: 16, marginBottom: 16 }} />
           <div style={{ fontFamily: "var(--font-serif)", fontSize: 36, color: "#2D6A5C" }}>AI Host</div>
           <div style={{ fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", marginTop: 4, color: "#999" }}>
             Intelligent Event Hosting Platform

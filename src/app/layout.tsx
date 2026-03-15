@@ -27,6 +27,7 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=DM+Serif+Display&display=swap"
           rel="stylesheet"
         />
+        <link rel="icon" href="/logo.png" />
       </head>
       <body>
         {children}
