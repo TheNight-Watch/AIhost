@@ -46,6 +46,9 @@ export default function ScriptLineList({
   const [batchGenerating, setBatchGenerating] = useState(false);
   const [batchProgress, setBatchProgress] = useState<string>("");
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [deleting, setDeleting] = useState(false);
 
   function handleContentChange(id: string, content: string) {
     onLinesUpdate(lines.map((l) => (l.id === id ? { ...l, content } : l)));
@@ -70,11 +73,80 @@ export default function ScriptLineList({
     onLineSelect(newLine.id);
   }
 
-  function handleDeleteLine(id: string) {
+  async function handleDeleteLine(id: string) {
     if (lines.length <= 1) return;
-    const updated = lines.filter((l) => l.id !== id);
-    onLinesUpdate(updated.map((l, i) => ({ ...l, sort_order: i + 1 })));
+    if (!window.confirm("Delete this line? This action cannot be undone.")) return;
+
+    const updated = lines.filter((l) => l.id !== id).map((l, i) => ({ ...l, sort_order: i + 1 }));
+    onLinesUpdate(updated);
     if (selectedLineId === id) onLineSelect(null);
+
+    // Persist to Supabase
+    try {
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      await supabase.from("script_lines").delete().eq("id", id);
+      // Update sort_order for remaining lines
+      for (let i = 0; i < updated.length; i++) {
+        await supabase.from("script_lines").update({ sort_order: i + 1 }).eq("id", updated[i].id);
+      }
+    } catch (err) {
+      console.error("Failed to delete line from Supabase:", err);
+    }
+  }
+
+  function handleToggleCheck(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function handleSelectAll() {
+    if (selectedIds.size === lines.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(lines.map((l) => l.id)));
+    }
+  }
+
+  function handleCancelSelect() {
+    setSelectMode(false);
+    setSelectedIds(new Set());
+  }
+
+  async function handleBatchDelete() {
+    if (selectedIds.size === 0) return;
+    // Ensure at least one line remains
+    const remaining = lines.filter((l) => !selectedIds.has(l.id));
+    if (remaining.length === 0) {
+      window.alert("Cannot delete all lines. At least one line must remain.");
+      return;
+    }
+    if (!window.confirm(`Delete ${selectedIds.size} selected line(s)? This action cannot be undone.`)) return;
+
+    setDeleting(true);
+    const updated = remaining.map((l, i) => ({ ...l, sort_order: i + 1 }));
+    onLinesUpdate(updated);
+    if (selectedLineId && selectedIds.has(selectedLineId)) onLineSelect(null);
+
+    // Persist to Supabase
+    try {
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      await supabase.from("script_lines").delete().in("id", Array.from(selectedIds));
+      for (let i = 0; i < updated.length; i++) {
+        await supabase.from("script_lines").update({ sort_order: i + 1 }).eq("id", updated[i].id);
+      }
+    } catch (err) {
+      console.error("Failed to batch delete from Supabase:", err);
+    } finally {
+      setDeleting(false);
+      setSelectMode(false);
+      setSelectedIds(new Set());
+    }
   }
 
   async function handleGenerateAudio(lineId: string) {
@@ -198,29 +270,109 @@ export default function ScriptLineList({
       <div
         style={{ display: "flex", alignItems: "center", gap: "10px", paddingLeft: "16px", paddingRight: "16px", paddingTop: "12px", paddingBottom: "12px", borderBottom: "2px dashed", borderColor: "#ddd", background: "#FFFDF5" }}
       >
-        <button
-          onClick={handleBatchGenerate}
-          disabled={batchGenerating}
-          style={{
-            background: "#2D6A5C",
-            color: "#FFF8E7",
-            border: "2px solid #333",
-            borderRadius: "10px",
-            padding: "8px 18px",
-            fontFamily: "var(--font-mono)",
-            fontSize: "12px",
-            fontWeight: 700,
-            cursor: batchGenerating ? "not-allowed" : "pointer",
-            opacity: batchGenerating ? 0.7 : 1,
-            transition: "all 0.2s",
-          }}
-        >
-          {batchGenerating ? `▶ ${batchProgress}` : "▶ Generate All Audio"}
-        </button>
-        <div style={{ flex: 1 }} />
-        <span style={{ fontSize: "10px", letterSpacing: "0.05em", color: "#aaa" }}>
-          {totalLines} lines // {durationStr} total
-        </span>
+        {!broadcastMode && selectMode ? (
+          <>
+            <button
+              onClick={handleBatchDelete}
+              disabled={deleting || selectedIds.size === 0}
+              style={{
+                background: selectedIds.size > 0 ? "#DC2626" : "#ccc",
+                color: "#FFF8E7",
+                border: "2px solid #333",
+                borderRadius: "10px",
+                padding: "8px 18px",
+                fontFamily: "var(--font-mono)",
+                fontSize: "12px",
+                fontWeight: 700,
+                cursor: deleting || selectedIds.size === 0 ? "not-allowed" : "pointer",
+                opacity: deleting ? 0.7 : 1,
+                transition: "all 0.2s",
+              }}
+            >
+              {deleting ? "Deleting..." : `Delete Selected (${selectedIds.size})`}
+            </button>
+            <button
+              onClick={handleSelectAll}
+              style={{
+                background: "transparent",
+                color: "#2D6A5C",
+                border: "2px solid #2D6A5C",
+                borderRadius: "10px",
+                padding: "8px 14px",
+                fontFamily: "var(--font-mono)",
+                fontSize: "12px",
+                fontWeight: 700,
+                cursor: "pointer",
+                transition: "all 0.2s",
+              }}
+            >
+              {selectedIds.size === lines.length ? "Deselect All" : "Select All"}
+            </button>
+            <div style={{ flex: 1 }} />
+            <button
+              onClick={handleCancelSelect}
+              style={{
+                background: "transparent",
+                color: "#999",
+                border: "2px solid #ccc",
+                borderRadius: "10px",
+                padding: "8px 14px",
+                fontFamily: "var(--font-mono)",
+                fontSize: "12px",
+                fontWeight: 700,
+                cursor: "pointer",
+                transition: "all 0.2s",
+              }}
+            >
+              Cancel
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              onClick={handleBatchGenerate}
+              disabled={batchGenerating}
+              style={{
+                background: "#2D6A5C",
+                color: "#FFF8E7",
+                border: "2px solid #333",
+                borderRadius: "10px",
+                padding: "8px 18px",
+                fontFamily: "var(--font-mono)",
+                fontSize: "12px",
+                fontWeight: 700,
+                cursor: batchGenerating ? "not-allowed" : "pointer",
+                opacity: batchGenerating ? 0.7 : 1,
+                transition: "all 0.2s",
+              }}
+            >
+              {batchGenerating ? `▶ ${batchProgress}` : "▶ Generate All Audio"}
+            </button>
+            {!broadcastMode && (
+              <button
+                onClick={() => { setSelectMode(true); setSelectedIds(new Set()); }}
+                style={{
+                  background: "transparent",
+                  color: "#2D6A5C",
+                  border: "2px solid #2D6A5C",
+                  borderRadius: "10px",
+                  padding: "8px 14px",
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                }}
+              >
+                Select
+              </button>
+            )}
+            <div style={{ flex: 1 }} />
+            <span style={{ fontSize: "10px", letterSpacing: "0.05em", color: "#aaa" }}>
+              {totalLines} lines // {durationStr} total
+            </span>
+          </>
+        )}
       </div>
 
       {/* Pixel divider */}
@@ -277,7 +429,10 @@ export default function ScriptLineList({
                 onContentChange={handleContentChange}
                 onGenerateAudio={handleGenerateAudio}
                 onPlayPause={handlePlayPause}
-                onDelete={!broadcastMode && lines.length > 1 ? () => handleDeleteLine(line.id) : undefined}
+                onDelete={!broadcastMode && !selectMode && lines.length > 1 ? () => handleDeleteLine(line.id) : undefined}
+                selectMode={!broadcastMode && selectMode}
+                isChecked={selectedIds.has(line.id)}
+                onCheckToggle={handleToggleCheck}
               />
               {/* Enhanced line indicator */}
               {broadcastMode && enhancedText && i === enhancedLineIndex && (
@@ -295,8 +450,8 @@ export default function ScriptLineList({
                   ENHANCED — AI generated transition based on guest speech
                 </div>
               )}
-              {/* Add line button between items (hidden in broadcast mode) */}
-              {broadcastMode ? null : (
+              {/* Add line button between items (hidden in broadcast mode and select mode) */}
+              {(broadcastMode || selectMode) ? null : (
                 <div
                   style={{
                     display: "flex",

@@ -73,6 +73,13 @@ export default function ScriptPage({ params }: Props) {
 
   const selectedLine = lines.find((l) => l.id === selectedLineId);
 
+  // Callback for AI chat sidebar to apply refined content to a script line
+  const handleApplyRefinement = useCallback((lineId: string, newContent: string) => {
+    setLines((prev) =>
+      prev.map((l) => (l.id === lineId ? { ...l, content: newContent, audio_url: null, duration_ms: 0 } : l))
+    );
+  }, []);
+
   const generatedCount = lines.filter((l) => !!l.audio_url).length;
   const totalDurationMs = lines.reduce((sum, l) => sum + (l.duration_ms || 0), 0);
   const progress = lines.length > 0 ? Math.round((generatedCount / lines.length) * 100) : 0;
@@ -267,6 +274,8 @@ export default function ScriptPage({ params }: Props) {
             <AIChatSidebar
               eventTitle={eventTitle}
               currentLine={selectedLine?.content}
+              selectedLineId={selectedLineId}
+              onApplyRefinement={handleApplyRefinement}
             />
           ) : (
             <BroadcastPanel

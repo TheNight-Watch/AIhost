@@ -13,6 +13,9 @@ interface Props {
   onGenerateAudio: (id: string) => Promise<void>;
   onPlayPause: (line: ScriptLine) => void;
   onDelete?: () => void;
+  selectMode?: boolean;
+  isChecked?: boolean;
+  onCheckToggle?: (id: string) => void;
 }
 
 export default function ScriptLineItem({
@@ -25,6 +28,9 @@ export default function ScriptLineItem({
   onGenerateAudio,
   onPlayPause,
   onDelete,
+  selectMode,
+  isChecked,
+  onCheckToggle,
 }: Props) {
   const [generating, setGenerating] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -72,7 +78,7 @@ export default function ScriptLineItem({
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "160px 1fr 110px",
+        gridTemplateColumns: selectMode ? "40px 160px 1fr 110px" : "160px 1fr 110px",
         borderBottom: "2px dashed",
         borderColor: "#ddd",
         minHeight: "90px",
@@ -80,8 +86,40 @@ export default function ScriptLineItem({
         cursor: "pointer",
         transition: "all 0.2s",
       }}
-      onClick={() => onSelect(line.id)}
+      onClick={() => selectMode && onCheckToggle ? onCheckToggle(line.id) : onSelect(line.id)}
     >
+      {/* Checkbox column in select mode */}
+      {selectMode && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            borderRight: "2px dashed",
+            borderColor: "#ddd",
+          }}
+        >
+          <div
+            onClick={(e) => { e.stopPropagation(); onCheckToggle?.(line.id); }}
+            style={{
+              width: "20px",
+              height: "20px",
+              borderRadius: "4px",
+              border: "2px solid #2D6A5C",
+              background: isChecked ? "#2D6A5C" : "#FFF8E7",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              transition: "all 0.2s",
+            }}
+          >
+            {isChecked && (
+              <span style={{ color: "#FFF8E7", fontSize: "14px", fontWeight: 700, lineHeight: 1 }}>✓</span>
+            )}
+          </div>
+        </div>
+      )}
       {/* Left: section label */}
       <div
         style={{
