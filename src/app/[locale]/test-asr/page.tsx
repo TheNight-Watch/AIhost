@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 
-const ASR_PROXY_URL = "ws://localhost:8765";
+const ASR_PROXY_URL = process.env.NEXT_PUBLIC_ASR_PROXY_URL || "ws://localhost:8765";
 const WINDOW_SIZE = 8;
 const CONSECUTIVE_YES_THRESHOLD = 2;
 

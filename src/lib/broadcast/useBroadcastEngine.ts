@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import type { ScriptLine } from "@/types";
 
-const ASR_PROXY_URL = "ws://localhost:8765";
+const ASR_PROXY_URL = process.env.NEXT_PUBLIC_ASR_PROXY_URL || "ws://localhost:8765";
 const WINDOW_SIZE = 8;
 const SILENCE_THRESHOLD_MS = 1000; // 1 second of silence required
 const SILENCE_CHECK_INTERVAL_MS = 500;
