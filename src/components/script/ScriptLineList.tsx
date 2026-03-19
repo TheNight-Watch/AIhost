@@ -16,6 +16,7 @@ interface Props {
   broadcastPhase?: string;
   enhancedText?: string | null;
   enhancedLineIndex?: number;
+  onBroadcastJump?: (index: number) => void;
 }
 
 export default function ScriptLineList({
@@ -30,8 +31,10 @@ export default function ScriptLineList({
   broadcastPhase,
   enhancedText,
   enhancedLineIndex = -1,
+  onBroadcastJump,
 }: Props) {
   const lineRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+  const saveTimeoutsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
   // No auto-scroll — user controls scroll manually
   const [playingId, setPlayingId] = useState<string | null>(null);
@@ -43,7 +46,43 @@ export default function ScriptLineList({
   const [deleting, setDeleting] = useState(false);
 
   function handleContentChange(id: string, content: string) {
-    onLinesUpdate(lines.map((l) => (l.id === id ? { ...l, content } : l)));
+    const updatedLines = lines.map((l) => (
+      l.id === id
+        ? {
+            ...l,
+            content,
+            audio_url: null,
+            duration_ms: 0,
+            audio_needs_regen: true,
+          }
+        : l
+    ));
+    onLinesUpdate(updatedLines);
+
+    const existing = saveTimeoutsRef.current.get(id);
+    if (existing) clearTimeout(existing);
+
+    const timeout = setTimeout(async () => {
+      try {
+        const { createClient } = await import("@/lib/supabase/client");
+        const supabase = createClient();
+        await supabase
+          .from("script_lines")
+          .update({
+            content,
+            audio_url: null,
+            duration_ms: 0,
+            audio_needs_regen: true,
+          })
+          .eq("id", id);
+      } catch (err) {
+        console.error("Failed to persist line content:", err);
+      } finally {
+        saveTimeoutsRef.current.delete(id);
+      }
+    }, 400);
+
+    saveTimeoutsRef.current.set(id, timeout);
   }
 
   async function handleAdvanceModeChange(id: string, advanceMode: AdvanceMode) {
@@ -61,7 +100,7 @@ export default function ScriptLineList({
     }
   }
 
-  function handleAddLine(afterIndex: number) {
+  async function handleAddLine(afterIndex: number) {
     const newLine: ScriptLine = {
       id: crypto.randomUUID(),
       event_id: eventId,
@@ -71,14 +110,40 @@ export default function ScriptLineList({
       advance_mode: "listen",
       audio_url: null,
       duration_ms: 0,
+      audio_needs_regen: false,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
     const updated = [...lines];
     updated.splice(afterIndex + 1, 0, newLine);
     // Re-number sort_order
-    onLinesUpdate(updated.map((l, i) => ({ ...l, sort_order: i + 1 })));
+    const reordered = updated.map((l, i) => ({ ...l, sort_order: i + 1 }));
+    onLinesUpdate(reordered);
     onLineSelect(newLine.id);
+
+    try {
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      await supabase.from("script_lines").insert({
+        id: newLine.id,
+        event_id: newLine.event_id,
+        sort_order: reordered[afterIndex + 1].sort_order,
+        speaker: newLine.speaker,
+        content: newLine.content,
+        advance_mode: newLine.advance_mode,
+        audio_url: null,
+        duration_ms: 0,
+        audio_needs_regen: false,
+      });
+
+      for (const line of reordered) {
+        if (line.id !== newLine.id) {
+          await supabase.from("script_lines").update({ sort_order: line.sort_order }).eq("id", line.id);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to add line to Supabase:", err);
+    }
   }
 
   async function handleDeleteLine(id: string) {
@@ -181,7 +246,12 @@ export default function ScriptLineList({
       onLinesUpdate(
         lines.map((l) =>
           l.id === lineId
-            ? { ...l, audio_url: audioUrl || l.audio_url, duration_ms: data.duration_ms || l.duration_ms }
+            ? {
+                ...l,
+                audio_url: audioUrl || l.audio_url,
+                duration_ms: data.duration_ms || l.duration_ms,
+                audio_needs_regen: false,
+              }
             : l
         )
       );
@@ -214,6 +284,7 @@ export default function ScriptLineList({
             updated.map((line) => ({
               ...line,
               advance_mode: line.advance_mode || "listen",
+              audio_needs_regen: line.audio_needs_regen ?? false,
             }))
           );
         }
@@ -227,6 +298,12 @@ export default function ScriptLineList({
   }
 
   function handlePlayPause(line: ScriptLine) {
+    if (broadcastMode && onBroadcastJump) {
+      const index = lines.findIndex((item) => item.id === line.id);
+      if (index >= 0) onBroadcastJump(index);
+      return;
+    }
+
     if (!line.audio_url) return;
 
     if (playingId === line.id) {
@@ -444,6 +521,7 @@ export default function ScriptLineList({
                 onAdvanceModeChange={handleAdvanceModeChange}
                 onGenerateAudio={handleGenerateAudio}
                 onPlayPause={handlePlayPause}
+                broadcastMode={broadcastMode}
                 onDelete={!broadcastMode && !selectMode && lines.length > 1 ? () => handleDeleteLine(line.id) : undefined}
                 selectMode={!broadcastMode && selectMode}
                 isChecked={selectedIds.has(line.id)}

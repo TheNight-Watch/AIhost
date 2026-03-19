@@ -561,6 +561,29 @@ export function useBroadcastEngine(lines: ScriptLine[], enhanceMode: boolean, vo
     playHostLine(nextIdx);
   }, [addLog, playHostLine, setPhaseSync]);
 
+  const jumpToIndex = useCallback((index: number) => {
+    const targetLine = linesRef.current[index];
+    if (!targetLine) return;
+
+    addLog(`[ENGINE] Manual jump to line ${index + 1}`);
+
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+
+    stopASR();
+    setSentences([]);
+    sentencesRef.current = [];
+    processedTextsRef.current = new Set();
+    setInterimText("");
+    setHasYesSync(false);
+    lastSentenceTimeRef.current = 0;
+    resetEnhanceState();
+
+    playHostLine(index);
+  }, [addLog, playHostLine, resetEnhanceState, setHasYesSync, stopASR]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -584,5 +607,6 @@ export function useBroadcastEngine(lines: ScriptLine[], enhanceMode: boolean, vo
     stopBroadcast,
     skipToNext,
     continueAfterManual,
+    jumpToIndex,
   };
 }

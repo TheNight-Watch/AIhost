@@ -67,6 +67,7 @@ export async function POST(request: NextRequest) {
         content: line.content,
         advance_mode: line.advance_mode || "listen",
         duration_ms: Math.round(line.content.length * 150), // rough estimate
+        audio_needs_regen: false,
       }));
     } catch (llmErr) {
       console.error("LLM extraction failed, using fallback:", llmErr);
@@ -113,6 +114,7 @@ export async function POST(request: NextRequest) {
               content: line.content,
               advance_mode: line.advance_mode,
               duration_ms: line.duration_ms,
+              audio_needs_regen: false,
             }))
           )
           .select();

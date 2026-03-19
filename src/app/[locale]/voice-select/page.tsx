@@ -1,12 +1,13 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import RetroNavbar from "@/components/ui/RetroNavbar";
 import VoiceGrid from "@/components/voice/VoiceGrid";
 import type { VoiceDef } from "@/lib/doubao/voices";
 import { getVoiceByType } from "@/lib/doubao/voices";
+import type { VoiceMode } from "@/types";
 
 interface Props {
   params: Promise<{ locale: string }>;
@@ -18,9 +19,20 @@ function VoiceSelectInner({ params }: Props) {
   const [locale, setLocale] = useState("zh");
   const [eventId, setEventId] = useState<string | null>(null);
   const [eventTitle, setEventTitle] = useState("Select Voice");
-  const [selectedVoice, setSelectedVoice] = useState<VoiceDef | null>(null);
+  const [primaryVoice, setPrimaryVoice] = useState<VoiceDef | null>(null);
+  const [secondaryVoice, setSecondaryVoice] = useState<VoiceDef | null>(null);
+  const [voiceMode, setVoiceMode] = useState<VoiceMode>("single");
+  const [activeSlot, setActiveSlot] = useState<"primary" | "secondary">("primary");
   const [saving, setSaving] = useState(false);
   const [userEmail, setUserEmail] = useState("");
+  const [error, setError] = useState("");
+
+  const selectedVoice = activeSlot === "primary" ? primaryVoice : secondaryVoice;
+  const canContinue = useMemo(() => {
+    if (!eventId || !primaryVoice) return false;
+    if (voiceMode === "dual_alternate" && !secondaryVoice) return false;
+    return true;
+  }, [eventId, primaryVoice, secondaryVoice, voiceMode]);
 
   useEffect(() => {
     params.then(({ locale: l }) => setLocale(l));
@@ -28,7 +40,6 @@ function VoiceSelectInner({ params }: Props) {
 
   useEffect(() => {
     const eid = searchParams.get("eventId");
-    setEventId(eid);
 
     async function init() {
       try {
@@ -38,13 +49,23 @@ function VoiceSelectInner({ params }: Props) {
         setUserEmail(user.email ?? "");
 
         if (eid) {
-          const { data: event } = await supabase.from("events").select("title, voice_id").eq("id", eid).single();
+          const { data: event } = await supabase
+            .from("events")
+            .select("title, voice_id, secondary_voice_id, voice_mode")
+            .eq("id", eid)
+            .single();
           if (event) {
+            setEventId(eid);
             setEventTitle(event.title);
             if (event.voice_id) {
               const v = getVoiceByType(event.voice_id);
-              if (v) setSelectedVoice(v);
+              if (v) setPrimaryVoice(v);
             }
+            if (event.secondary_voice_id) {
+              const secondary = getVoiceByType(event.secondary_voice_id);
+              if (secondary) setSecondaryVoice(secondary);
+            }
+            setVoiceMode((event.voice_mode as VoiceMode) || "single");
           }
         }
       } catch {
@@ -54,14 +75,48 @@ function VoiceSelectInner({ params }: Props) {
     init();
   }, [searchParams, router]);
 
+  function handleVoiceSelect(voice: VoiceDef) {
+    setError("");
+    if (activeSlot === "primary") {
+      setPrimaryVoice(voice);
+      return;
+    }
+    setSecondaryVoice(voice);
+  }
+
   async function handleConfirm() {
-    if (!selectedVoice || !eventId) return;
+    if (!eventId || !primaryVoice) return;
+    if (voiceMode === "dual_alternate" && !secondaryVoice) {
+      setError("Select the secondary host voice before continuing.");
+      return;
+    }
     setSaving(true);
+    setError("");
     try {
       const supabase = createClient();
-      await supabase.from("events").update({ voice_id: selectedVoice.voice_type }).eq("id", eventId);
+      await supabase
+        .from("events")
+        .update({
+          voice_id: primaryVoice.voice_type,
+          secondary_voice_id: voiceMode === "dual_alternate" ? secondaryVoice?.voice_type ?? null : null,
+          voice_mode: voiceMode,
+        })
+        .eq("id", eventId);
+
+      const batchResponse = await fetch("/api/generate-audio-batch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ event_id: eventId }),
+      });
+
+      const batchData = await batchResponse.json();
+      if (!batchResponse.ok || !batchData.success) {
+        throw new Error(batchData.error || "Failed to generate audio");
+      }
+
       router.push(`/${locale}/script/${eventId}`);
     } catch {
+      setError("Failed to save voices or generate audio.");
       setSaving(false);
     }
   }
@@ -110,11 +165,78 @@ function VoiceSelectInner({ params }: Props) {
         <p style={{ fontSize: "11px", letterSpacing: "0.1em", textTransform: "uppercase", marginTop: "4px", color: "#999" }}>
           Preview and choose the AI voice for your event
         </p>
+        <div style={{ display: "flex", gap: "12px", marginTop: "16px", flexWrap: "wrap", alignItems: "center" }}>
+          <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", color: "#2D6A5C" }}>
+            <input
+              type="radio"
+              checked={voiceMode === "single"}
+              onChange={() => {
+                setVoiceMode("single");
+                setActiveSlot("primary");
+              }}
+            />
+            Single Host
+          </label>
+          <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", color: "#2D6A5C" }}>
+            <input
+              type="radio"
+              checked={voiceMode === "dual_alternate"}
+              onChange={() => setVoiceMode("dual_alternate")}
+            />
+            Dual Host Alternate
+          </label>
+          {voiceMode === "dual_alternate" && (
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button
+                onClick={() => setActiveSlot("primary")}
+                style={{
+                  padding: "6px 10px",
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  border: "2px solid #333",
+                  borderRadius: "8px",
+                  background: activeSlot === "primary" ? "#2D6A5C" : "#FFF8E7",
+                  color: activeSlot === "primary" ? "#FFF8E7" : "#2D6A5C",
+                  cursor: "pointer",
+                }}
+              >
+                Primary
+              </button>
+              <button
+                onClick={() => setActiveSlot("secondary")}
+                style={{
+                  padding: "6px 10px",
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  border: "2px solid #333",
+                  borderRadius: "8px",
+                  background: activeSlot === "secondary" ? "#8B2252" : "#FFF8E7",
+                  color: activeSlot === "secondary" ? "#FFF8E7" : "#8B2252",
+                  cursor: "pointer",
+                }}
+              >
+                Secondary
+              </button>
+            </div>
+          )}
+        </div>
+        {voiceMode === "dual_alternate" && (
+          <div style={{ marginTop: "12px", fontSize: "12px", color: "#666" }}>
+            Host lines will alternate between the primary and secondary voices in script order.
+          </div>
+        )}
+        {error && (
+          <div style={{ marginTop: "12px", fontSize: "12px", color: "#B42318" }}>
+            {error}
+          </div>
+        )}
       </div>
 
       <VoiceGrid
         selectedVoiceType={selectedVoice?.voice_type ?? null}
-        onSelect={setSelectedVoice}
+        onSelect={handleVoiceSelect}
       />
 
       {/* Bottom action bar */}
@@ -141,16 +263,17 @@ function VoiceSelectInner({ params }: Props) {
           <span style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", opacity: 0.6 }}>
             Selected Voice
           </span>
-          {selectedVoice ? (
+          {primaryVoice ? (
             <span style={{ fontFamily: "var(--font-serif)", fontSize: "18px" }}>
-              {selectedVoice.name}
+              {primaryVoice.name}
+              {voiceMode === "dual_alternate" && secondaryVoice ? ` / ${secondaryVoice.name}` : ""}
             </span>
           ) : (
             <span style={{ opacity: 0.5, fontSize: "12px" }}>None selected</span>
           )}
         </div>
         <div style={{ flex: 1 }} />
-        {eventId && selectedVoice && (
+        {canContinue && (
           <button
             onClick={handleConfirm}
             disabled={saving}
@@ -170,7 +293,7 @@ function VoiceSelectInner({ params }: Props) {
               opacity: saving ? 0.7 : 1,
             }}
           >
-            {saving ? "Saving..." : "Confirm & Continue \u2192"}
+            {saving ? "Saving & Generating..." : "Confirm & Continue \u2192"}
           </button>
         )}
         <span style={{ fontSize: "10px", opacity: 0.4 }}>SYS.HOST.V2 // Voice Module</span>

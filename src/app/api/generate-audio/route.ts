@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { textToSpeechBase64 } from "@/lib/doubao/tts";
+import { resolveVoiceForLine } from "@/lib/voice-assignment";
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,9 +11,38 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "line_id and content are required" }, { status: 400 });
     }
 
+    let resolvedVoice = voice_type || "zh_female_vv_uranus_bigtts";
+    if (event_id) {
+      try {
+        const supabase = createServiceClient();
+        const [{ data: event }, { data: lines }] = await Promise.all([
+          supabase
+            .from("events")
+            .select("voice_id, secondary_voice_id, voice_mode")
+            .eq("id", event_id)
+            .single(),
+          supabase
+            .from("script_lines")
+            .select("id, speaker, sort_order")
+            .eq("event_id", event_id)
+            .order("sort_order"),
+        ]);
+
+        if (event && lines) {
+          resolvedVoice = resolveVoiceForLine(lines, line_id, {
+            voice_id: event.voice_id ?? resolvedVoice,
+            secondary_voice_id: event.secondary_voice_id ?? null,
+            voice_mode: event.voice_mode ?? "single",
+          });
+        }
+      } catch {
+        // Fall back to the requested voice type.
+      }
+    }
+
     // Generate audio
     const audioBase64 = await textToSpeechBase64(content, {
-      voice_type: voice_type || "zh_female_vv_uranus_bigtts",
+      voice_type: resolvedVoice,
     });
 
     const audioBuffer = Buffer.from(audioBase64, "base64");
@@ -38,7 +68,7 @@ export async function POST(request: NextRequest) {
         // Update script line record
         await supabase
           .from("script_lines")
-          .update({ audio_url: audioUrl, duration_ms: durationMs })
+          .update({ audio_url: audioUrl, duration_ms: durationMs, audio_needs_regen: false })
           .eq("id", line_id);
       }
     } catch (storageErr) {

@@ -19,6 +19,7 @@ function normalizeScriptLine(line: Partial<ScriptLine>): ScriptLine {
     advance_mode: line.advance_mode || "listen",
     audio_url: line.audio_url ?? null,
     duration_ms: line.duration_ms ?? 0,
+    audio_needs_regen: line.audio_needs_regen ?? false,
     created_at: line.created_at || new Date().toISOString(),
     updated_at: line.updated_at || new Date().toISOString(),
   };
@@ -96,8 +97,29 @@ export default function ScriptPage({ params }: Props) {
   // Callback for AI chat sidebar to apply refined content to a script line
   const handleApplyRefinement = useCallback((lineId: string, newContent: string) => {
     setLines((prev) =>
-      prev.map((l) => (l.id === lineId ? { ...l, content: newContent, audio_url: null, duration_ms: 0 } : l))
+      prev.map((l) => (
+        l.id === lineId
+          ? { ...l, content: newContent, audio_url: null, duration_ms: 0, audio_needs_regen: true }
+          : l
+      ))
     );
+
+    void (async () => {
+      try {
+        const supabase = createClient();
+        await supabase
+          .from("script_lines")
+          .update({
+            content: newContent,
+            audio_url: null,
+            duration_ms: 0,
+            audio_needs_regen: true,
+          })
+          .eq("id", lineId);
+      } catch {
+        // ignore
+      }
+    })();
   }, []);
 
   const generatedCount = lines.filter((l) => !!l.audio_url).length;
@@ -305,6 +327,7 @@ export default function ScriptPage({ params }: Props) {
             broadcastPhase={engine.phase}
             enhancedText={engine.enhancedText}
             enhancedLineIndex={engine.enhancedLineIndex}
+            onBroadcastJump={broadcastMode ? engine.jumpToIndex : undefined}
           />
         )}
 

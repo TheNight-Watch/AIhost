@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { textToSpeechBase64 } from "@/lib/doubao/tts";
+import { resolveVoiceForLine } from "@/lib/voice-assignment";
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,12 +13,22 @@ export async function POST(request: NextRequest) {
 
     const supabase = createServiceClient();
 
-    // Fetch all script lines for this event
-    const { data: lines, error: linesError } = await supabase
-      .from("script_lines")
-      .select("id, content")
-      .eq("event_id", event_id)
-      .order("sort_order");
+    const [{ data: event, error: eventError }, { data: lines, error: linesError }] = await Promise.all([
+      supabase
+        .from("events")
+        .select("voice_id, secondary_voice_id, voice_mode")
+        .eq("id", event_id)
+        .single(),
+      supabase
+        .from("script_lines")
+        .select("id, content, speaker, sort_order")
+        .eq("event_id", event_id)
+        .order("sort_order"),
+    ]);
+
+    if (eventError || !event) {
+      return NextResponse.json({ error: "Failed to fetch event voice configuration" }, { status: 500 });
+    }
 
     if (linesError || !lines) {
       return NextResponse.json({ error: "Failed to fetch script lines" }, { status: 500 });
@@ -28,8 +39,14 @@ export async function POST(request: NextRequest) {
     // Process lines sequentially to avoid rate limiting
     for (const line of lines) {
       try {
+        const resolvedVoice = resolveVoiceForLine(lines, line.id, {
+          voice_id: event.voice_id ?? voice_type ?? "zh_female_vv_uranus_bigtts",
+          secondary_voice_id: event.secondary_voice_id ?? null,
+          voice_mode: event.voice_mode ?? "single",
+        });
+
         const audioBase64 = await textToSpeechBase64(line.content, {
-          voice_type: voice_type || "zh_female_vv_uranus_bigtts",
+          voice_type: resolvedVoice,
         });
 
         const audioBuffer = Buffer.from(audioBase64, "base64");
@@ -45,7 +62,7 @@ export async function POST(request: NextRequest) {
 
           await supabase
             .from("script_lines")
-            .update({ audio_url: publicUrl, duration_ms: durationMs })
+            .update({ audio_url: publicUrl, duration_ms: durationMs, audio_needs_regen: false })
             .eq("id", line.id);
 
           results.push({ line_id: line.id, audio_url: publicUrl });

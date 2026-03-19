@@ -35,6 +35,7 @@ export type Locale = "zh" | "en";
 
 export type EventStatus = "draft" | "ready" | "live" | "completed";
 export type AdvanceMode = "listen" | "continue" | "manual";
+export type VoiceMode = "single" | "dual_alternate";
 
 export interface Event {
   id: string;
@@ -43,6 +44,8 @@ export interface Event {
   description: string | null;
   status: EventStatus;
   voice_id: string | null;
+  secondary_voice_id: string | null;
+  voice_mode: VoiceMode;
   created_at: string;
   updated_at: string;
   script_lines_count?: number;
@@ -57,6 +60,7 @@ export interface ScriptLine {
   advance_mode: AdvanceMode;
   audio_url: string | null;
   duration_ms: number | null;
+  audio_needs_regen: boolean;
   created_at: string;
   updated_at: string;
 }

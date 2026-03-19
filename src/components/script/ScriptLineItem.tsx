@@ -13,6 +13,7 @@ interface Props {
   onAdvanceModeChange: (id: string, advanceMode: AdvanceMode) => void;
   onGenerateAudio: (id: string) => Promise<void>;
   onPlayPause: (line: ScriptLine) => void;
+  broadcastMode?: boolean;
   onDelete?: () => void;
   selectMode?: boolean;
   isChecked?: boolean;
@@ -29,6 +30,7 @@ export default function ScriptLineItem({
   onAdvanceModeChange,
   onGenerateAudio,
   onPlayPause,
+  broadcastMode,
   onDelete,
   selectMode,
   isChecked,
@@ -52,6 +54,7 @@ export default function ScriptLineItem({
   const sectionLabel = line.speaker || `Section ${index + 1}`;
   const secNum = String(index + 1).padStart(2, "0");
   const hasAudio = !!line.audio_url;
+  const needsRegen = line.audio_needs_regen;
 
   const durationSec = line.duration_ms ? Math.round(line.duration_ms / 1000) : null;
   const durationDisplay = durationSec
@@ -309,12 +312,20 @@ export default function ScriptLineItem({
             transition: "all 0.2s",
           }}
         >
-          {generating ? "..." : hasAudio ? "DONE" : "GENERATE"}
+          {generating ? "..." : needsRegen ? "REGENERATE" : hasAudio ? "DONE" : "GENERATE"}
         </button>
         <span
           style={{ fontSize: "9px", letterSpacing: "0.1em", textTransform: "uppercase", color: isPlaying ? "#333" : "#aaa" }}
         >
-          {isPlaying ? "PLAYING" : hasAudio ? `${durationDisplay}` : "PENDING"}
+          {broadcastMode
+            ? "JUMP"
+            : isPlaying
+              ? "PLAYING"
+              : needsRegen
+                ? "STALE"
+                : hasAudio
+                  ? `${durationDisplay}`
+                  : "PENDING"}
         </span>
       </div>
     </div>

@@ -39,6 +39,8 @@ export default function EventList({ locale, initialEvents }: Props) {
             description: e.description as string | null,
             status: e.status as Event["status"],
             voice_id: e.voice_id as string | null,
+            secondary_voice_id: (e.secondary_voice_id as string | null) ?? null,
+            voice_mode: (e.voice_mode as Event["voice_mode"]) ?? "single",
             created_at: e.created_at as string,
             updated_at: e.updated_at as string,
             script_lines_count:

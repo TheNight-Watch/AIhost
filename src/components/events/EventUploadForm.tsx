@@ -286,6 +286,7 @@ export default function EventUploadForm({ locale, userId }: Props) {
         content: line.content,
         advance_mode: line.advance_mode,
         duration_ms: Math.round(line.content.length * 150),
+        audio_needs_regen: false,
       }));
 
       const { error: insertError } = await supabase
@@ -305,7 +306,7 @@ export default function EventUploadForm({ locale, userId }: Props) {
       setSaveSuccess(true);
       setTimeout(() => {
         resetUploadState();
-        router.push(`/${locale}/script/${eventId}`);
+        router.push(`/${locale}/voice-select?eventId=${eventId}`);
         router.refresh();
       }, 1000);
     } catch (err) {
