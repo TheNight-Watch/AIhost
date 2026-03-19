@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { generateScript, generateScriptFromAgenda, generateScriptFromImage } from "@/lib/doubao/llm";
 
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 interface GenerateScriptRequest {
   event_id: string;

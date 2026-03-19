@@ -8,6 +8,35 @@ export interface ChatMessage {
   content: string;
 }
 
+function parseJsonArray<T>(reply: string): T {
+  const jsonMatch = reply.match(/\[[\s\S]*\]/);
+  if (!jsonMatch) {
+    throw new Error("LLM did not return valid JSON array");
+  }
+
+  return JSON.parse(jsonMatch[0]) as T;
+}
+
+async function withTimeout<T>(
+  promise: Promise<T>,
+  ms: number,
+  label: string
+): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => {
+      reject(new Error(`${label} timed out after ${ms}ms`));
+    }, ms);
+  });
+
+  try {
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+}
+
 /**
  * Call Ark LLM API (OpenAI-compatible chat/completions).
  * Returns the assistant's reply text.
@@ -127,12 +156,7 @@ export async function generateScriptFromAgenda(
     { role: "user", content: userPrompt },
   ], { temperature: 0.7 });
 
-  const jsonMatch = reply.match(/\[[\s\S]*\]/);
-  if (!jsonMatch) {
-    throw new Error("LLM did not return valid JSON array");
-  }
-
-  return JSON.parse(jsonMatch[0]);
+  return parseJsonArray(reply);
 }
 
 /**
@@ -174,13 +198,7 @@ export async function generateScript(
     { role: "user", content: userPrompt },
   ], { temperature: 0.3 });
 
-  // Parse JSON from reply
-  const jsonMatch = reply.match(/\[[\s\S]*\]/);
-  if (!jsonMatch) {
-    throw new Error("LLM did not return valid JSON array");
-  }
-
-  return JSON.parse(jsonMatch[0]);
+  return parseJsonArray(reply);
 }
 
 /**
@@ -191,22 +209,57 @@ export async function generateScriptFromImage(
   imageBase64: string,
   eventTitle: string
 ): Promise<Array<{ sort_order: number; speaker: string; content: string }>> {
-  // Step 1: Use multimodal API to extract agenda/flow text from the image
   const imageUrl = imageBase64.startsWith("data:")
     ? imageBase64
     : `data:image/jpeg;base64,${imageBase64}`;
 
-  const extractedText = await multimodalAnalyze(
-    imageUrl,
-    "请识别这张活动流程图/议程图中的文字内容，并尽可能整理成清晰的活动流程或议程文本。保留环节顺序、标题、时间、嘉宾、说明等关键信息。只输出整理后的文字结果，不要添加任何解释。"
-  );
+  try {
+    const extractedText = await withTimeout(
+      multimodalAnalyze(
+        imageUrl,
+        "请识别这张活动流程图/议程图中的文字内容，并尽可能整理成清晰的活动流程或议程文本。保留环节顺序、标题、时间、嘉宾、说明等关键信息。只输出整理后的文字结果，不要添加任何解释。"
+      ),
+      18000,
+      "Ark multimodal agenda extraction"
+    );
 
-  if (!extractedText.trim()) {
-    throw new Error("Failed to extract text from image");
+    if (!extractedText.trim()) {
+      throw new Error("Failed to extract text from image");
+    }
+
+    return await withTimeout(
+      generateScriptFromAgenda(extractedText, eventTitle),
+      18000,
+      "Ark agenda-to-script generation"
+    );
+  } catch (twoStepError) {
+    console.warn("[generateScriptFromImage] two-step pipeline failed, falling back to single-pass multimodal generation", twoStepError);
+
+    const singlePassReply = await withTimeout(
+      multimodalAnalyze(
+        imageUrl,
+        `你是一个专业的活动主持人台词撰写助手。
+
+请直接根据这张活动流程图/议程图的内容，为活动《${eventTitle}》生成主持人口播台词。
+
+## 核心规则
+1. 根据图中的流程、时间、环节、嘉宾、说明等信息，生成自然、专业、适合现场口播的主持稿
+2. 覆盖主要流程节点，包括开场、过渡、介绍、串场、结束等需要主持人口播的部分
+3. 每个元素必须是一个完整的口播段落，优先按主持人会一口气说完的一整段来分组
+4. 同一开场中的欢迎语、自我介绍、活动概述，如果现场会连续说完，必须合并为同一个 content
+5. 不要按句号、换行或图上排版机械拆分
+6. speaker 默认使用 "host"
+
+## 输出格式
+仅返回一个合法的 JSON 数组，每个元素包含：{sort_order, speaker, content}
+不要包含任何解释说明，仅返回 JSON 数组。`
+      ),
+      30000,
+      "Ark single-pass multimodal script generation"
+    );
+
+    return parseJsonArray(singlePassReply);
   }
-
-  // Step 2: Treat the extracted text as an agenda/flow and generate host script
-  return generateScriptFromAgenda(extractedText, eventTitle);
 }
 
 /**
