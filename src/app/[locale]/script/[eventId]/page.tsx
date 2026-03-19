@@ -2,13 +2,27 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import RetroNavbar from "@/components/ui/RetroNavbar";
 import ScriptLineList from "@/components/script/ScriptLineList";
 import AIChatSidebar from "@/components/script/AIChatSidebar";
 import { useBroadcastEngine } from "@/lib/broadcast/useBroadcastEngine";
 import type { ScriptLine } from "@/types";
+
+function normalizeScriptLine(line: Partial<ScriptLine>): ScriptLine {
+  return {
+    id: line.id || crypto.randomUUID(),
+    event_id: line.event_id || "",
+    sort_order: line.sort_order || 0,
+    speaker: line.speaker || "host",
+    content: line.content || "",
+    advance_mode: line.advance_mode || "listen",
+    audio_url: line.audio_url ?? null,
+    duration_ms: line.duration_ms ?? 0,
+    created_at: line.created_at || new Date().toISOString(),
+    updated_at: line.updated_at || new Date().toISOString(),
+  };
+}
 
 interface Props {
   params: Promise<{ locale: string; eventId: string }>;
@@ -30,26 +44,7 @@ export default function ScriptPage({ params }: Props) {
 
   const engine = useBroadcastEngine(lines, enhanceMode, voiceId || undefined);
 
-  useEffect(() => {
-    params.then(({ locale: l, eventId: eid }) => {
-      setLocale(l);
-      setEventId(eid);
-      loadData(l, eid);
-    });
-  }, [params]);
-
-  // Auto-scroll logs within the log container only (don't scroll the whole page)
-  useEffect(() => {
-    const el = logsEndRef.current;
-    if (el) {
-      const container = el.parentElement;
-      if (container) {
-        container.scrollTop = container.scrollHeight;
-      }
-    }
-  }, [engine.logs]);
-
-  async function loadData(loc: string, eid: string) {
+  const loadData = useCallback(async (loc: string, eid: string) => {
     setLoading(true);
     try {
       const supabase = createClient();
@@ -69,13 +64,32 @@ export default function ScriptPage({ params }: Props) {
         .eq("event_id", eid)
         .order("sort_order");
 
-      if (scriptLines) setLines(scriptLines);
+      if (scriptLines) setLines(scriptLines.map((line) => normalizeScriptLine(line)));
     } catch {
       // ignore
     } finally {
       setLoading(false);
     }
-  }
+  }, [router]);
+
+  useEffect(() => {
+    params.then(({ locale: l, eventId: eid }) => {
+      setLocale(l);
+      setEventId(eid);
+      loadData(l, eid);
+    });
+  }, [loadData, params]);
+
+  // Auto-scroll logs within the log container only (don't scroll the whole page)
+  useEffect(() => {
+    const el = logsEndRef.current;
+    if (el) {
+      const container = el.parentElement;
+      if (container) {
+        container.scrollTop = container.scrollHeight;
+      }
+    }
+  }, [engine.logs]);
 
   const selectedLine = lines.find((l) => l.id === selectedLineId);
 
@@ -109,6 +123,7 @@ export default function ScriptPage({ params }: Props) {
     playing: "PLAYING",
     listening: "LISTENING",
     judging: "ANALYZING",
+    waiting_manual: "AWAITING CUE",
     finished: "COMPLETE",
   }[engine.phase];
 
@@ -117,6 +132,7 @@ export default function ScriptPage({ params }: Props) {
     playing: "#98E4C9",
     listening: "#FFD4B8",
     judging: "#c084fc",
+    waiting_manual: "#f59e0b",
     finished: "#4ade80",
   }[engine.phase];
 
@@ -205,6 +221,24 @@ export default function ScriptPage({ params }: Props) {
             </div>
           ) : (
             <div style={{ display: "flex", gap: "8px" }}>
+              {engine.phase === "waiting_manual" && (
+                <button
+                  onClick={engine.continueAfterManual}
+                  style={{
+                    padding: "6px 12px",
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    background: "#f59e0b",
+                    color: "#1a1a2e",
+                    border: "2px solid #fbbf24",
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                  }}
+                >
+                  Continue
+                </button>
+              )}
               <button
                 onClick={engine.skipToNext}
                 style={{
@@ -415,6 +449,14 @@ function BroadcastPanel({
   enhanceMode: boolean;
 
 }) {
+  const advanceModeLabel = currentLine
+    ? {
+        listen: "LISTEN",
+        continue: "CONTINUE",
+        manual: "MANUAL",
+      }[currentLine.advance_mode]
+    : null;
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
       {/* Current line info */}
@@ -432,6 +474,29 @@ function BroadcastPanel({
             <div style={{ fontSize: "11px", color: "#FFD4B8", marginBottom: "6px", textTransform: "uppercase" }}>
               {currentLine.speaker}
             </div>
+            <div style={{
+              display: "inline-flex",
+              alignItems: "center",
+              width: "fit-content",
+              fontSize: "10px",
+              fontWeight: 700,
+              letterSpacing: "0.08em",
+              padding: "4px 8px",
+              borderRadius: "999px",
+              marginBottom: "8px",
+              background: currentLine.advance_mode === "continue"
+                ? "rgba(45, 106, 92, 0.2)"
+                : currentLine.advance_mode === "manual"
+                  ? "rgba(245, 158, 11, 0.2)"
+                  : "rgba(139, 111, 71, 0.2)",
+              color: currentLine.advance_mode === "continue"
+                ? "#98E4C9"
+                : currentLine.advance_mode === "manual"
+                  ? "#fbbf24"
+                  : "#FFD4B8",
+            }}>
+              NEXT: {advanceModeLabel}
+            </div>
             <div style={{ fontSize: "13px", color: "#e0e0e0", lineHeight: "1.5" }}>
               {currentLine.content.length > 120 ? currentLine.content.slice(0, 120) + "..." : currentLine.content}
             </div>
@@ -440,6 +505,22 @@ function BroadcastPanel({
           <div style={{ fontSize: "12px", color: "#666" }}>Waiting...</div>
         )}
       </div>
+
+      {phase === "waiting_manual" && (
+        <div style={{
+          background: "#1a1a2e",
+          border: "2px solid #f59e0b",
+          borderRadius: "12px",
+          padding: "14px 16px",
+        }}>
+          <div style={{ fontSize: "10px", color: "#fbbf24", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "6px" }}>
+            Manual Gate
+          </div>
+          <div style={{ fontSize: "13px", color: "#e0e0e0", lineHeight: "1.6" }}>
+            Current line finished. Autobroadcast is paused and waiting for operator confirmation to continue.
+          </div>
+        </div>
+      )}
 
       {/* Trigger conditions (only when listening) */}
       {(phase === "listening" || phase === "judging") && (

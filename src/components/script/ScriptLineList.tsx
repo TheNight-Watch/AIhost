@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
-import type { ScriptLine } from "@/types";
+import { useState, useRef } from "react";
+import type { AdvanceMode, ScriptLine } from "@/types";
 import ScriptLineItem from "./ScriptLineItem";
 
 interface Props {
@@ -46,6 +46,21 @@ export default function ScriptLineList({
     onLinesUpdate(lines.map((l) => (l.id === id ? { ...l, content } : l)));
   }
 
+  async function handleAdvanceModeChange(id: string, advanceMode: AdvanceMode) {
+    const updatedLines = lines.map((line) =>
+      line.id === id ? { ...line, advance_mode: advanceMode } : line
+    );
+    onLinesUpdate(updatedLines);
+
+    try {
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      await supabase.from("script_lines").update({ advance_mode: advanceMode }).eq("id", id);
+    } catch (err) {
+      console.error("Failed to update advance mode:", err);
+    }
+  }
+
   function handleAddLine(afterIndex: number) {
     const newLine: ScriptLine = {
       id: crypto.randomUUID(),
@@ -53,6 +68,7 @@ export default function ScriptLineList({
       sort_order: afterIndex + 2,
       speaker: "host",
       content: "",
+      advance_mode: "listen",
       audio_url: null,
       duration_ms: 0,
       created_at: new Date().toISOString(),
@@ -193,7 +209,14 @@ export default function ScriptLineList({
           .select("*")
           .eq("event_id", eventId)
           .order("sort_order");
-        if (updated) onLinesUpdate(updated);
+        if (updated) {
+          onLinesUpdate(
+            updated.map((line) => ({
+              ...line,
+              advance_mode: line.advance_mode || "listen",
+            }))
+          );
+        }
       }
     } catch {
       setBatchProgress("Error");
@@ -238,7 +261,6 @@ export default function ScriptLineList({
   }
 
   const totalLines = lines.length;
-  const generatedCount = lines.filter((l) => !!l.audio_url).length;
   const totalDurationMs = lines.reduce((sum, l) => sum + (l.duration_ms || 0), 0);
   const totalDurationMin = Math.floor(totalDurationMs / 60000);
   const totalDurationSec = Math.round((totalDurationMs % 60000) / 1000);
@@ -419,6 +441,7 @@ export default function ScriptLineList({
                 isPlaying={playingId === line.id}
                 onSelect={onLineSelect}
                 onContentChange={handleContentChange}
+                onAdvanceModeChange={handleAdvanceModeChange}
                 onGenerateAudio={handleGenerateAudio}
                 onPlayPause={handlePlayPause}
                 onDelete={!broadcastMode && !selectMode && lines.length > 1 ? () => handleDeleteLine(line.id) : undefined}

@@ -1,3 +1,5 @@
+import type { AdvanceMode } from "@/types";
+
 const ARK_BASE_URL = "https://ark.cn-beijing.volces.com/api/v3";
 const ARK_API_KEY = process.env.ARK_API_KEY!;
 const ARK_ENDPOINT_ID = process.env.ARK_ENDPOINT_ID!;
@@ -6,6 +8,31 @@ const ARK_ENDPOINT_ID = process.env.ARK_ENDPOINT_ID!;
 export interface ChatMessage {
   role: "system" | "user" | "assistant";
   content: string;
+}
+
+interface GeneratedScriptLine {
+  sort_order?: number;
+  speaker?: string;
+  content?: string;
+  advance_mode?: string;
+}
+
+function normalizeAdvanceMode(mode?: string): AdvanceMode {
+  if (mode === "continue" || mode === "manual" || mode === "listen") {
+    return mode;
+  }
+  return "listen";
+}
+
+function normalizeScriptLines(lines: GeneratedScriptLine[]) {
+  return lines
+    .filter((line) => typeof line?.content === "string" && line.content.trim())
+    .map((line, index) => ({
+      sort_order: line.sort_order || index + 1,
+      speaker: line.speaker || "host",
+      content: line.content!.trim(),
+      advance_mode: normalizeAdvanceMode(line.advance_mode),
+    }));
 }
 
 /**
@@ -97,10 +124,10 @@ export async function multimodalAnalyze(
 export async function generateScriptFromAgenda(
   agendaText: string,
   eventTitle: string
-): Promise<Array<{ sort_order: number; speaker: string; content: string }>> {
+): Promise<Array<{ sort_order: number; speaker: string; content: string; advance_mode: AdvanceMode }>> {
   const systemPrompt = `你是一个专业的活动主持人台词撰写助手。
 
-根据用户提供的活动议程/流程安排，为主持人撰写自然、专业的口播台词。
+根据用户提供的活动议程/流程安排，为主持人撰写自然、专业的口播台词，并为每一段台词判断播完后的推进方式。
 
 ## 核心规则
 1. **创作台词**：根据议程内容撰写适合口播的主持人台词，语言自然流畅，适合现场朗读
@@ -108,9 +135,14 @@ export async function generateScriptFromAgenda(
 3. **风格要求**：正式但不死板，专业但有温度，适合活动现场的氛围
 4. **分段原则**：每段台词对应一个环节或自然停顿点，每段 1-3 句
 5. **speaker 字段**：默认为 "host"
+6. **advance_mode 字段**：必须为 "listen"、"continue" 或 "manual"
+   - "continue": 当前段播完后，主持人应立刻连续播报下一段，不需要等待外部发言
+   - "listen": 当前段播完后，需要等待嘉宾、观众或其他外部发言/互动结束，再播下一段
+   - "manual": 当前段播完后，应等待工作人员或主持人手动确认，再继续
+   - 如果无法确定，默认使用 "listen"
 
 ## 输出格式
-仅返回一个合法的 JSON 数组，每个元素包含：{sort_order, speaker, content}
+仅返回一个合法的 JSON 数组，每个元素包含：{sort_order, speaker, content, advance_mode}
 不要包含任何解释说明，仅返回 JSON 数组。`;
 
   const userPrompt = `活动名称: ${eventTitle}\n\n议程/流程:\n${agendaText}\n\n请为主持人撰写口播台词，返回 JSON 数组。`;
@@ -125,7 +157,7 @@ export async function generateScriptFromAgenda(
     throw new Error("LLM did not return valid JSON array");
   }
 
-  return JSON.parse(jsonMatch[0]);
+  return normalizeScriptLines(JSON.parse(jsonMatch[0]));
 }
 
 /**
@@ -136,7 +168,7 @@ export async function generateScriptFromAgenda(
 export async function generateScript(
   agendaText: string,
   eventTitle: string
-): Promise<Array<{ sort_order: number; speaker: string; content: string }>> {
+): Promise<Array<{ sort_order: number; speaker: string; content: string; advance_mode: AdvanceMode }>> {
   const systemPrompt = `你是一个专业的活动主持稿拆分助手。
 
 你的任务是：从用户提供的原始活动文稿中，提取出需要口播的主持人台词，并按“现场实际会如何一段一段说出来”的方式，拆分为结构化 script lines。
@@ -208,6 +240,15 @@ export async function generateScript(
 - 只有当原文中明确出现了其他发言人，并且能确定该段属于该发言人时，才使用对应 speaker
 - 不要随意猜测 speaker
 
+### 8. advance_mode 规则
+你必须为每一段 content 额外输出一个 advance_mode 字段，用来表示“这一段播完后，系统应如何推进到下一段”：
+- "continue"：当前段播完后，应立刻连续播报下一段；适用于同一轮主持人口播中的连续说明、连续开场、连续介绍
+- "listen"：当前段播完后，应等待嘉宾、观众或其他外部发言/互动结束，再播下一段
+- "manual"：当前段播完后，应暂停，等待工作人员或主持人手动确认再继续；适用于明确需要现场确认、执行动作或不适合自动判断的节点
+- 如果无法确定，默认使用 "listen"
+
+判断 advance_mode 时，要基于整份文稿的上下文，而不是只看当前段内容。
+
 ## 输出格式
 只返回一个合法的 JSON 数组。
 数组每个元素格式如下：
@@ -215,7 +256,8 @@ export async function generateScript(
 {
   "sort_order": 1,
   "speaker": "host",
-  "content": "这里是一整段连续口播内容"
+  "content": "这里是一整段连续口播内容",
+  "advance_mode": "listen"
 }
 
 ## 输出要求
@@ -243,7 +285,7 @@ ${agendaText}
     throw new Error("LLM did not return valid JSON array");
   }
 
-  return JSON.parse(jsonMatch[0]);
+  return normalizeScriptLines(JSON.parse(jsonMatch[0]));
 }
 
 /**
@@ -253,7 +295,7 @@ ${agendaText}
 export async function generateScriptFromImage(
   imageBase64: string,
   eventTitle: string
-): Promise<Array<{ sort_order: number; speaker: string; content: string }>> {
+): Promise<Array<{ sort_order: number; speaker: string; content: string; advance_mode: AdvanceMode }>> {
   // Step 1: Use multimodal API to extract text from the image
   const imageUrl = imageBase64.startsWith("data:")
     ? imageBase64

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import type { ScriptLine } from "@/types";
+import type { AdvanceMode, ScriptLine } from "@/types";
 
 interface Props {
   line: ScriptLine;
@@ -10,6 +10,7 @@ interface Props {
   isPlaying: boolean;
   onSelect: (id: string) => void;
   onContentChange: (id: string, content: string) => void;
+  onAdvanceModeChange: (id: string, advanceMode: AdvanceMode) => void;
   onGenerateAudio: (id: string) => Promise<void>;
   onPlayPause: (line: ScriptLine) => void;
   onDelete?: () => void;
@@ -25,6 +26,7 @@ export default function ScriptLineItem({
   isPlaying,
   onSelect,
   onContentChange,
+  onAdvanceModeChange,
   onGenerateAudio,
   onPlayPause,
   onDelete,
@@ -33,7 +35,6 @@ export default function ScriptLineItem({
   onCheckToggle,
 }: Props) {
   const [generating, setGenerating] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const autoResize = useCallback(() => {
@@ -73,6 +74,11 @@ export default function ScriptLineItem({
   }
 
   const bg = isPlaying ? "#FFD4B8" : isSelected ? "#98E4C9" : "transparent";
+  const advanceModeColor = line.advance_mode === "continue"
+    ? "#2D6A5C"
+    : line.advance_mode === "manual"
+      ? "#8B2252"
+      : "#8B6F47";
 
   return (
     <div
@@ -157,6 +163,33 @@ export default function ScriptLineItem({
             </button>
           )}
         </div>
+        <select
+          value={line.advance_mode}
+          onChange={(e) => {
+            e.stopPropagation();
+            onAdvanceModeChange(line.id, e.target.value as AdvanceMode);
+          }}
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            width: "100%",
+            fontFamily: "var(--font-mono)",
+            fontSize: "10px",
+            fontWeight: 700,
+            color: advanceModeColor,
+            background: "#FFFDF5",
+            border: `1px solid ${advanceModeColor}`,
+            borderRadius: "7px",
+            padding: "4px 6px",
+            outline: "none",
+            letterSpacing: "0.04em",
+            textTransform: "uppercase",
+          }}
+          title="Advance mode"
+        >
+          <option value="listen">LISTEN</option>
+          <option value="continue">CONTINUE</option>
+          <option value="manual">MANUAL</option>
+        </select>
       </div>
 
       {/* Center: text + audio bar */}

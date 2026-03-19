@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import type { ScriptLine } from "@/types";
+import type { AdvanceMode, ScriptLine } from "@/types";
 
 const ASR_PROXY_URL = process.env.NEXT_PUBLIC_ASR_PROXY_URL || "ws://localhost:8765";
 const WINDOW_SIZE = 8;
@@ -14,6 +14,7 @@ export type BroadcastPhase =
   | "playing"
   | "listening"
   | "judging"
+  | "waiting_manual"
   | "finished";
 
 export type EnhanceStatus = "idle" | "generating" | "ready" | "failed";
@@ -47,6 +48,8 @@ export function useBroadcastEngine(lines: ScriptLine[], enhanceMode: boolean, vo
   const audioCtxRef = useRef<AudioContext | null>(null);
   const processorRef = useRef<ScriptProcessorNode | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const startListeningRef = useRef<(nextLineIndex: number) => void | Promise<void>>(() => {});
+  const startAudioCaptureRef = useRef<(stream: MediaStream) => void>(() => {});
   const sentencesRef = useRef<DefiniteSentence[]>([]);
   const processedTextsRef = useRef<Set<string>>(new Set());
 
@@ -90,6 +93,10 @@ export function useBroadcastEngine(lines: ScriptLine[], enhanceMode: boolean, vo
   const setEnhanceStatusSync = useCallback((s: EnhanceStatus) => {
     enhanceStatusRef.current = s;
     setEnhanceStatus(s);
+  }, []);
+
+  const getAdvanceMode = useCallback((line?: ScriptLine): AdvanceMode => {
+    return line?.advance_mode || "listen";
   }, []);
 
   // ── Reset enhance state (called when starting a new listening session) ──
@@ -194,6 +201,7 @@ export function useBroadcastEngine(lines: ScriptLine[], enhanceMode: boolean, vo
 
   // ── After a host line finishes playing ──
   const afterHostLinePlayed = useCallback((index: number) => {
+    const currentLine = linesRef.current[index];
     const nextIndex = index + 1;
     if (nextIndex >= linesRef.current.length) {
       addLog(`[ENGINE] All lines completed!`);
@@ -201,10 +209,23 @@ export function useBroadcastEngine(lines: ScriptLine[], enhanceMode: boolean, vo
       return;
     }
 
-    addLog(`[ENGINE] Waiting for speaker to finish before line ${nextIndex + 1}...`);
-    startListening(nextIndex);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [addLog, setPhaseSync]);
+    const advanceMode = getAdvanceMode(currentLine);
+
+    if (advanceMode === "continue") {
+      addLog(`[ENGINE] Line ${index + 1} is CONTINUE — playing line ${nextIndex + 1} immediately`);
+      playHostLine(nextIndex);
+      return;
+    }
+
+    if (advanceMode === "manual") {
+      addLog(`[ENGINE] Line ${index + 1} is MANUAL — waiting for operator before line ${nextIndex + 1}`);
+      setPhaseSync("waiting_manual");
+      return;
+    }
+
+    addLog(`[ENGINE] Line ${index + 1} is LISTEN — waiting for speaker before line ${nextIndex + 1}...`);
+    startListeningRef.current(nextIndex);
+  }, [addLog, getAdvanceMode, playHostLine, setPhaseSync]);
 
   // ── Background enhance generation ──
   const triggerEnhanceGeneration = useCallback(async (nextIndex: number) => {
@@ -404,7 +425,7 @@ export function useBroadcastEngine(lines: ScriptLine[], enhanceMode: boolean, vo
         const msg = JSON.parse(event.data);
         if (msg.type === "ready") {
           addLog("[ASR] Session ready, capturing audio...");
-          startAudioCapture(stream);
+          startAudioCaptureRef.current(stream);
           startSilenceTimer(nextLineIndex);
           if (enhanceModeRef.current) {
             addLog("[ENHANCE] Mode ON — will generate enhanced line at 50+ chars");
@@ -423,8 +444,11 @@ export function useBroadcastEngine(lines: ScriptLine[], enhanceMode: boolean, vo
     } catch (err) {
       addLog(`[ASR] Failed: ${err}`);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [addLog, setPhaseSync, setHasYesSync, resetEnhanceState, handleASRResult, startSilenceTimer]);
+
+  useEffect(() => {
+    startListeningRef.current = startListening;
+  }, [startListening]);
 
   // ── Audio capture (PCM 16kHz 16bit mono) ──
   const startAudioCapture = useCallback((stream: MediaStream) => {
@@ -449,6 +473,10 @@ export function useBroadcastEngine(lines: ScriptLine[], enhanceMode: boolean, vo
     processor.connect(audioCtx.destination);
     addLog("[ASR] Audio capture started (PCM 16kHz)");
   }, [addLog]);
+
+  useEffect(() => {
+    startAudioCaptureRef.current = startAudioCapture;
+  }, [startAudioCapture]);
 
   // ── Public API ──
   const startBroadcast = useCallback(() => {
@@ -518,6 +546,21 @@ export function useBroadcastEngine(lines: ScriptLine[], enhanceMode: boolean, vo
     }
   }, [addLog, stopASR, setHasYesSync, setPhaseSync, playHostLine, resetEnhanceState]);
 
+  const continueAfterManual = useCallback(() => {
+    if (phaseRef.current !== "waiting_manual") return;
+
+    const idx = currentIndexRef.current;
+    const nextIdx = idx + 1;
+    if (idx < 0 || nextIdx >= linesRef.current.length) {
+      setPhaseSync("finished");
+      addLog("[ENGINE] Manual continue reached end of script");
+      return;
+    }
+
+    addLog(`[ENGINE] Manual continue from line ${idx + 1} to line ${nextIdx + 1}`);
+    playHostLine(nextIdx);
+  }, [addLog, playHostLine, setPhaseSync]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -540,5 +583,6 @@ export function useBroadcastEngine(lines: ScriptLine[], enhanceMode: boolean, vo
     startBroadcast,
     stopBroadcast,
     skipToNext,
+    continueAfterManual,
   };
 }

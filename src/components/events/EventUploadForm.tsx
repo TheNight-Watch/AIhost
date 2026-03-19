@@ -6,7 +6,7 @@ import { useDropzone } from "react-dropzone";
 import { createClient } from "@/lib/supabase/client";
 import { fileToBase64 } from "@/lib/supabase/storage";
 import { useEventStore } from "@/stores/eventStore";
-import type { Locale } from "@/types";
+import type { AdvanceMode, Locale } from "@/types";
 import { t } from "@/lib/i18n";
 
 interface Props {
@@ -19,6 +19,7 @@ interface PreviewLine {
   sort_order: number;
   speaker: string;
   content: string;
+  advance_mode: AdvanceMode;
 }
 
 export default function EventUploadForm({ locale, userId }: Props) {
@@ -191,11 +192,12 @@ export default function EventUploadForm({ locale, userId }: Props) {
 
       // Convert API response to preview lines
       const lines: PreviewLine[] = (data.script_lines || []).map(
-        (line: { id?: string; sort_order: number; speaker: string; content: string }, i: number) => ({
+        (line: { id?: string; sort_order: number; speaker: string; content: string; advance_mode?: AdvanceMode }, i: number) => ({
           id: line.id || crypto.randomUUID(),
           sort_order: i + 1,
           speaker: line.speaker || "host",
           content: line.content,
+          advance_mode: line.advance_mode || "listen",
         })
       );
       setPreviewLines(lines);
@@ -216,12 +218,17 @@ export default function EventUploadForm({ locale, userId }: Props) {
     setPreviewLines((prev) => prev.map((l) => (l.id === id ? { ...l, speaker } : l)));
   }
 
+  function handlePreviewLineAdvanceModeChange(id: string, advanceMode: AdvanceMode) {
+    setPreviewLines((prev) => prev.map((l) => (l.id === id ? { ...l, advance_mode: advanceMode } : l)));
+  }
+
   function handleAddPreviewLine(afterIndex: number) {
     const newLine: PreviewLine = {
       id: crypto.randomUUID(),
       sort_order: afterIndex + 2,
       speaker: "host",
       content: "",
+      advance_mode: "listen",
     };
     setPreviewLines((prev) => {
       const updated = [...prev];
@@ -277,6 +284,7 @@ export default function EventUploadForm({ locale, userId }: Props) {
         sort_order: line.sort_order,
         speaker: line.speaker,
         content: line.content,
+        advance_mode: line.advance_mode,
         duration_ms: Math.round(line.content.length * 150),
       }));
 
@@ -754,6 +762,7 @@ export default function EventUploadForm({ locale, userId }: Props) {
                         onBlur={() => setEditingLineId(null)}
                         onContentChange={handlePreviewLineChange}
                         onSpeakerChange={handlePreviewLineSpeakerChange}
+                        onAdvanceModeChange={handlePreviewLineAdvanceModeChange}
                         onDelete={previewLines.length > 1 ? () => handleDeletePreviewLine(line.id) : undefined}
                         onAddAfter={() => handleAddPreviewLine(i)}
                         isLast={i === previewLines.length - 1}
@@ -916,6 +925,7 @@ function PreviewLineRow({
   onBlur,
   onContentChange,
   onSpeakerChange,
+  onAdvanceModeChange,
   onDelete,
   onAddAfter,
   isLast,
@@ -927,6 +937,7 @@ function PreviewLineRow({
   onBlur: () => void;
   onContentChange: (id: string, content: string) => void;
   onSpeakerChange: (id: string, speaker: string) => void;
+  onAdvanceModeChange: (id: string, advanceMode: AdvanceMode) => void;
   onDelete?: () => void;
   onAddAfter: () => void;
   isLast: boolean;
@@ -965,7 +976,7 @@ function PreviewLineRow({
             display: "flex",
             flexDirection: "column",
             justifyContent: "center",
-            gap: "4px",
+            gap: "6px",
             padding: "10px 12px",
             borderRight: "1px solid #eee",
           }}
@@ -1010,6 +1021,25 @@ function PreviewLineRow({
               </button>
             )}
           </div>
+          <select
+            value={line.advance_mode}
+            onChange={(e) => onAdvanceModeChange(line.id, e.target.value as AdvanceMode)}
+            style={{
+              width: "100%",
+              fontFamily: "var(--font-mono)",
+              fontSize: "10px",
+              color: "#2D6A5C",
+              background: "#F7F2E7",
+              border: "1px solid #d8d0bf",
+              borderRadius: "6px",
+              padding: "4px 6px",
+              outline: "none",
+            }}
+          >
+            <option value="listen">LISTEN</option>
+            <option value="continue">CONTINUE</option>
+            <option value="manual">MANUAL</option>
+          </select>
         </div>
 
         {/* Center: content */}

@@ -34,6 +34,7 @@ export interface UploadedFile {
 export type Locale = "zh" | "en";
 
 export type EventStatus = "draft" | "ready" | "live" | "completed";
+export type AdvanceMode = "listen" | "continue" | "manual";
 
 export interface Event {
   id: string;
@@ -53,6 +54,7 @@ export interface ScriptLine {
   sort_order: number;
   speaker: string;
   content: string;
+  advance_mode: AdvanceMode;
   audio_url: string | null;
   duration_ms: number | null;
   created_at: string;
