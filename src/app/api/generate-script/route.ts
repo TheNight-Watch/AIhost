@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { generateScript, generateScriptFromAgenda, generateScriptFromImage } from "@/lib/doubao/llm";
 
+export const maxDuration = 60;
+
 interface GenerateScriptRequest {
   event_id: string;
   agenda_text?: string;
@@ -22,6 +24,7 @@ function generateFallbackScript() {
 }
 
 export async function POST(request: NextRequest) {
+  const startedAt = Date.now();
   try {
     const body = (await request.json()) as GenerateScriptRequest;
     const { event_id, agenda_text, agenda_image_base64, event_title, mode = "extract" } = body;
@@ -70,6 +73,15 @@ export async function POST(request: NextRequest) {
       console.error("LLM extraction failed, using fallback:", llmErr);
       scriptLines = generateFallbackScript();
     }
+
+    console.log("[generate-script] processed", {
+      mode,
+      eventId: event_id,
+      usedImage: Boolean(agenda_image_base64),
+      inputLength: agenda_text?.length ?? 0,
+      outputLines: scriptLines.length,
+      elapsedMs: Date.now() - startedAt,
+    });
 
     // Save to Supabase
     let savedLines = scriptLines.map((line) => ({

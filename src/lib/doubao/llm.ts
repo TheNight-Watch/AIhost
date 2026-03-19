@@ -8,6 +8,115 @@ export interface ChatMessage {
   content: string;
 }
 
+interface ScriptLine {
+  sort_order: number;
+  speaker: string;
+  content: string;
+}
+
+const SPEAKER_LABEL_PATTERN =
+  /^([A-Za-z\u4e00-\u9fa5]{1,20})(?:[（(][^)）]{0,20}[)）])?[:：]\s*/;
+
+const NOISE_PATTERNS = [
+  /^\s*$/,
+  /^[=\-_*~#]{2,}\s*$/,
+  /^\s*[0-2]?\d[:：][0-5]\d(\s*[-–—~至到]\s*[0-2]?\d[:：][0-5]\d)?\s*$/,
+  /^\s*(part|section|chapter|环节|流程|议程|agenda)\b[\s\d一二三四五六七八九十零:：.-]*/i,
+  /^\s*(暖场|开场视频|播放视频|茶歇|抽奖|合影|结束|签到|倒计时)\s*$/,
+  /^\s*[（(【\[][^()（）【】\[\]]{0,40}[)）】\]]\s*$/,
+];
+
+function normalizeScriptText(rawText: string): string {
+  return rawText
+    .replace(/\r\n/g, "\n")
+    .replace(/\u00a0/g, " ")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+function isNoiseLine(line: string): boolean {
+  const trimmed = line.trim();
+  if (!trimmed) return true;
+  return NOISE_PATTERNS.some((pattern) => pattern.test(trimmed));
+}
+
+function extractSpeakerAndContent(line: string): { speaker: string; content: string } {
+  const trimmed = line.trim();
+  const match = trimmed.match(SPEAKER_LABEL_PATTERN);
+
+  if (!match) {
+    return { speaker: "host", content: trimmed };
+  }
+
+  const speaker = match[1]?.trim() || "host";
+  const content = trimmed.slice(match[0].length).trim();
+  return {
+    speaker: speaker || "host",
+    content: content || trimmed,
+  };
+}
+
+function splitLongParagraph(content: string): string[] {
+  const normalized = content.replace(/\s+/g, " ").trim();
+  if (!normalized) return [];
+  if (normalized.length <= 140) return [normalized];
+
+  const chunks: string[] = [];
+  let current = "";
+
+  for (const part of normalized.split(/(?<=[。！？!?；;])/u)) {
+    const segment = part.trim();
+    if (!segment) continue;
+
+    if (!current) {
+      current = segment;
+      continue;
+    }
+
+    if ((current + segment).length <= 120) {
+      current += segment;
+      continue;
+    }
+
+    chunks.push(current.trim());
+    current = segment;
+  }
+
+  if (current.trim()) {
+    chunks.push(current.trim());
+  }
+
+  return chunks.length > 0 ? chunks : [normalized];
+}
+
+function extractScriptLocally(rawText: string): ScriptLine[] {
+  const normalized = normalizeScriptText(rawText);
+  if (!normalized) return [];
+
+  const paragraphs = normalized
+    .split(/\n{2,}/)
+    .flatMap((block) => block.split("\n"))
+    .map((line) => line.trim())
+    .filter((line) => !isNoiseLine(line));
+
+  const lines: ScriptLine[] = [];
+
+  for (const paragraph of paragraphs) {
+    const { speaker, content } = extractSpeakerAndContent(paragraph);
+    for (const piece of splitLongParagraph(content)) {
+      if (!piece || isNoiseLine(piece)) continue;
+      lines.push({
+        sort_order: lines.length + 1,
+        speaker,
+        content: piece,
+      });
+    }
+  }
+
+  return lines;
+}
+
 /**
  * Call Ark LLM API (OpenAI-compatible chat/completions).
  * Returns the assistant's reply text.
@@ -137,6 +246,13 @@ export async function generateScript(
   agendaText: string,
   eventTitle: string
 ): Promise<Array<{ sort_order: number; speaker: string; content: string }>> {
+  const localLines = extractScriptLocally(agendaText);
+
+  // Fast path for full host scripts: avoid sending very long text to the LLM.
+  if (localLines.length >= 3) {
+    return localLines;
+  }
+
   const systemPrompt = `你是一个专业的活动主持稿件拆分助手。
 
 你的任务是从用户提供的原始活动文稿中，提取出需要口播的台词，并按顺序拆分为独立的播报段落。
