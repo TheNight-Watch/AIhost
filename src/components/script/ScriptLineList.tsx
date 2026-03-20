@@ -45,6 +45,12 @@ export default function ScriptLineList({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [deleting, setDeleting] = useState(false);
 
+  function isInterruptedPlaybackError(error: unknown) {
+    const message = error instanceof Error ? error.message : String(error ?? "");
+    return (error instanceof DOMException && error.name === "AbortError")
+      || message.includes("The play() request was interrupted by a call to pause()");
+  }
+
   function handleContentChange(id: string, content: string) {
     const updatedLines = lines.map((l) => (
       l.id === id
@@ -362,7 +368,11 @@ export default function ScriptLineList({
     const audio = new Audio(line.audio_url);
     audioRef.current = audio;
     setPlayingId(line.id);
-    audio.play();
+    void audio.play().catch((error) => {
+      if (isInterruptedPlaybackError(error)) return;
+      setPlayingId(null);
+      if (audioRef.current === audio) audioRef.current = null;
+    });
     audio.onended = () => {
       setPlayingId(null);
       audioRef.current = null;

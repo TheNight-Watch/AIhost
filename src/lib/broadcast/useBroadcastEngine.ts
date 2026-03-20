@@ -19,6 +19,12 @@ export type BroadcastPhase =
 
 export type EnhanceStatus = "idle" | "generating" | "ready" | "failed";
 
+function isInterruptedPlaybackError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error ?? "");
+  return (error instanceof DOMException && error.name === "AbortError")
+    || message.includes("The play() request was interrupted by a call to pause()");
+}
+
 interface DefiniteSentence {
   text: string;
   timestamp: number;
@@ -158,7 +164,11 @@ export function useBroadcastEngine(lines: ScriptLine[], enhanceMode: boolean, vo
     audioRef.current = audio;
     audio.onended = () => { audioRef.current = null; onEnd(); };
     audio.onerror = () => { audioRef.current = null; onEnd(); };
-    audio.play().catch(() => { audioRef.current = null; onEnd(); });
+    void audio.play().catch((error) => {
+      if (audioRef.current === audio) audioRef.current = null;
+      if (isInterruptedPlaybackError(error)) return;
+      onEnd();
+    });
   }, []);
 
   // ── Play host line audio ──

@@ -13,6 +13,12 @@ export default function VoiceCard({ voice, isSelected, onSelect }: Props) {
   const [previewing, setPreviewing] = useState(false);
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
 
+  function isInterruptedPlaybackError(error: unknown) {
+    const message = error instanceof Error ? error.message : String(error ?? "");
+    return (error instanceof DOMException && error.name === "AbortError")
+      || message.includes("The play() request was interrupted by a call to pause()");
+  }
+
   async function handlePreview(e: React.MouseEvent) {
     e.stopPropagation();
 
@@ -42,7 +48,11 @@ export default function VoiceCard({ voice, isSelected, onSelect }: Props) {
       const url = URL.createObjectURL(blob);
       const audio = new Audio(url);
       setAudioElement(audio);
-      audio.play();
+      void audio.play().catch((error) => {
+        if (isInterruptedPlaybackError(error)) return;
+        setPreviewing(false);
+        URL.revokeObjectURL(url);
+      });
       audio.onended = () => {
         setPreviewing(false);
         URL.revokeObjectURL(url);
