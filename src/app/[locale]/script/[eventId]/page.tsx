@@ -17,6 +17,7 @@ function normalizeScriptLine(line: Partial<ScriptLine>): ScriptLine {
     speaker: line.speaker || "host",
     content: line.content || "",
     advance_mode: line.advance_mode || "listen",
+    speech_rate: typeof line.speech_rate === "number" ? line.speech_rate : 0,
     audio_url: line.audio_url ?? null,
     duration_ms: line.duration_ms ?? 0,
     audio_needs_regen: line.audio_needs_regen ?? false,

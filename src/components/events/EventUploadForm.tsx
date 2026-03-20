@@ -20,6 +20,7 @@ interface PreviewLine {
   speaker: string;
   content: string;
   advance_mode: AdvanceMode;
+  speech_rate: number;
 }
 
 export default function EventUploadForm({ locale, userId }: Props) {
@@ -192,12 +193,13 @@ export default function EventUploadForm({ locale, userId }: Props) {
 
       // Convert API response to preview lines
       const lines: PreviewLine[] = (data.script_lines || []).map(
-        (line: { id?: string; sort_order: number; speaker: string; content: string; advance_mode?: AdvanceMode }, i: number) => ({
+        (line: { id?: string; sort_order: number; speaker: string; content: string; advance_mode?: AdvanceMode; speech_rate?: number }, i: number) => ({
           id: line.id || crypto.randomUUID(),
           sort_order: i + 1,
           speaker: line.speaker || "host",
           content: line.content,
           advance_mode: line.advance_mode || "listen",
+          speech_rate: typeof line.speech_rate === "number" ? line.speech_rate : 0,
         })
       );
       setPreviewLines(lines);
@@ -222,6 +224,11 @@ export default function EventUploadForm({ locale, userId }: Props) {
     setPreviewLines((prev) => prev.map((l) => (l.id === id ? { ...l, advance_mode: advanceMode } : l)));
   }
 
+  function handlePreviewLineSpeechRateChange(id: string, speechRate: number) {
+    const normalized = Math.max(-50, Math.min(100, Math.round(speechRate)));
+    setPreviewLines((prev) => prev.map((l) => (l.id === id ? { ...l, speech_rate: normalized } : l)));
+  }
+
   function handleAddPreviewLine(afterIndex: number) {
     const newLine: PreviewLine = {
       id: crypto.randomUUID(),
@@ -229,6 +236,7 @@ export default function EventUploadForm({ locale, userId }: Props) {
       speaker: "host",
       content: "",
       advance_mode: "listen",
+      speech_rate: 0,
     };
     setPreviewLines((prev) => {
       const updated = [...prev];
@@ -285,6 +293,7 @@ export default function EventUploadForm({ locale, userId }: Props) {
         speaker: line.speaker,
         content: line.content,
         advance_mode: line.advance_mode,
+        speech_rate: line.speech_rate,
         duration_ms: Math.round(line.content.length * 150),
         audio_needs_regen: false,
       }));
@@ -764,6 +773,7 @@ export default function EventUploadForm({ locale, userId }: Props) {
                         onContentChange={handlePreviewLineChange}
                         onSpeakerChange={handlePreviewLineSpeakerChange}
                         onAdvanceModeChange={handlePreviewLineAdvanceModeChange}
+                        onSpeechRateChange={handlePreviewLineSpeechRateChange}
                         onDelete={previewLines.length > 1 ? () => handleDeletePreviewLine(line.id) : undefined}
                         onAddAfter={() => handleAddPreviewLine(i)}
                         isLast={i === previewLines.length - 1}
@@ -927,6 +937,7 @@ function PreviewLineRow({
   onContentChange,
   onSpeakerChange,
   onAdvanceModeChange,
+  onSpeechRateChange,
   onDelete,
   onAddAfter,
   isLast,
@@ -939,6 +950,7 @@ function PreviewLineRow({
   onContentChange: (id: string, content: string) => void;
   onSpeakerChange: (id: string, speaker: string) => void;
   onAdvanceModeChange: (id: string, advanceMode: AdvanceMode) => void;
+  onSpeechRateChange: (id: string, speechRate: number) => void;
   onDelete?: () => void;
   onAddAfter: () => void;
   isLast: boolean;
@@ -1041,6 +1053,28 @@ function PreviewLineRow({
             <option value="continue">CONTINUE</option>
             <option value="manual">MANUAL</option>
           </select>
+          <label style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+            <span style={{ fontSize: "9px", letterSpacing: "0.05em", color: "#999" }}>RATE</span>
+            <input
+              type="number"
+              min={-50}
+              max={100}
+              step={5}
+              value={line.speech_rate}
+              onChange={(e) => onSpeechRateChange(line.id, Number(e.target.value))}
+              style={{
+                width: "100%",
+                fontFamily: "var(--font-mono)",
+                fontSize: "10px",
+                color: "#2D6A5C",
+                background: "#F7F2E7",
+                border: "1px solid #d8d0bf",
+                borderRadius: "6px",
+                padding: "4px 6px",
+                outline: "none",
+              }}
+            />
+          </label>
         </div>
 
         {/* Center: content */}

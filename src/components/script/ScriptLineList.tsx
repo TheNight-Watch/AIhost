@@ -85,6 +85,38 @@ export default function ScriptLineList({
     saveTimeoutsRef.current.set(id, timeout);
   }
 
+  async function handleSpeechRateChange(id: string, speechRate: number) {
+    const normalized = Math.max(-50, Math.min(100, Math.round(speechRate)));
+    const updatedLines = lines.map((line) =>
+      line.id === id
+        ? {
+            ...line,
+            speech_rate: normalized,
+            audio_url: null,
+            duration_ms: 0,
+            audio_needs_regen: true,
+          }
+        : line
+    );
+    onLinesUpdate(updatedLines);
+
+    try {
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      await supabase
+        .from("script_lines")
+        .update({
+          speech_rate: normalized,
+          audio_url: null,
+          duration_ms: 0,
+          audio_needs_regen: true,
+        })
+        .eq("id", id);
+    } catch (err) {
+      console.error("Failed to update speech rate:", err);
+    }
+  }
+
   async function handleAdvanceModeChange(id: string, advanceMode: AdvanceMode) {
     const updatedLines = lines.map((line) =>
       line.id === id ? { ...line, advance_mode: advanceMode } : line
@@ -108,6 +140,7 @@ export default function ScriptLineList({
       speaker: "host",
       content: "",
       advance_mode: "listen",
+      speech_rate: 0,
       audio_url: null,
       duration_ms: 0,
       audio_needs_regen: false,
@@ -131,6 +164,7 @@ export default function ScriptLineList({
         speaker: newLine.speaker,
         content: newLine.content,
         advance_mode: newLine.advance_mode,
+        speech_rate: newLine.speech_rate,
         audio_url: null,
         duration_ms: 0,
         audio_needs_regen: false,
@@ -234,6 +268,7 @@ export default function ScriptLineList({
         event_id: eventId,
         content: line.content,
         voice_type: voiceType || "zh_female_vv_uranus_bigtts",
+        speech_rate: line.speech_rate,
       }),
     });
 
@@ -284,6 +319,7 @@ export default function ScriptLineList({
             updated.map((line) => ({
               ...line,
               advance_mode: line.advance_mode || "listen",
+              speech_rate: typeof line.speech_rate === "number" ? line.speech_rate : 0,
               audio_needs_regen: line.audio_needs_regen ?? false,
             }))
           );
@@ -517,9 +553,10 @@ export default function ScriptLineList({
                 isSelected={selectedLineId === line.id}
                 isPlaying={playingId === line.id}
                 onSelect={onLineSelect}
-                onContentChange={handleContentChange}
-                onAdvanceModeChange={handleAdvanceModeChange}
-                onGenerateAudio={handleGenerateAudio}
+            onContentChange={handleContentChange}
+            onAdvanceModeChange={handleAdvanceModeChange}
+            onSpeechRateChange={handleSpeechRateChange}
+            onGenerateAudio={handleGenerateAudio}
                 onPlayPause={handlePlayPause}
                 broadcastMode={broadcastMode}
                 onDelete={!broadcastMode && !selectMode && lines.length > 1 ? () => handleDeleteLine(line.id) : undefined}

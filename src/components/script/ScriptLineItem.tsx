@@ -11,6 +11,7 @@ interface Props {
   onSelect: (id: string) => void;
   onContentChange: (id: string, content: string) => void;
   onAdvanceModeChange: (id: string, advanceMode: AdvanceMode) => void;
+  onSpeechRateChange: (id: string, speechRate: number) => void;
   onGenerateAudio: (id: string) => Promise<void>;
   onPlayPause: (line: ScriptLine) => void;
   broadcastMode?: boolean;
@@ -28,6 +29,7 @@ export default function ScriptLineItem({
   onSelect,
   onContentChange,
   onAdvanceModeChange,
+  onSpeechRateChange,
   onGenerateAudio,
   onPlayPause,
   broadcastMode,
@@ -193,6 +195,34 @@ export default function ScriptLineItem({
           <option value="continue">CONTINUE</option>
           <option value="manual">MANUAL</option>
         </select>
+        <label style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+          <span style={{ fontSize: "9px", letterSpacing: "0.08em", color: "#999" }}>RATE</span>
+          <input
+            type="number"
+            min={-50}
+            max={100}
+            step={5}
+            value={line.speech_rate}
+            onChange={(e) => {
+              e.stopPropagation();
+              onSpeechRateChange(line.id, Number(e.target.value));
+            }}
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: "100%",
+              fontFamily: "var(--font-mono)",
+              fontSize: "10px",
+              fontWeight: 700,
+              color: "#2D6A5C",
+              background: "#FFFDF5",
+              border: "1px solid #cbd5cf",
+              borderRadius: "7px",
+              padding: "4px 6px",
+              outline: "none",
+            }}
+            title="Speech rate"
+          />
+        </label>
       </div>
 
       {/* Center: text + audio bar */}

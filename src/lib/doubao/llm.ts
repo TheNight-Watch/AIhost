@@ -15,6 +15,7 @@ interface GeneratedScriptLine {
   speaker?: string;
   content?: string;
   advance_mode?: string;
+  speech_rate?: number;
 }
 
 function normalizeAdvanceMode(mode?: string): AdvanceMode {
@@ -22,6 +23,37 @@ function normalizeAdvanceMode(mode?: string): AdvanceMode {
     return mode;
   }
   return "listen";
+}
+
+function clampSpeechRate(rate: number): number {
+  if (!Number.isFinite(rate)) return 0;
+  return Math.max(-50, Math.min(100, Math.round(rate)));
+}
+
+function inferSpeechRate(content: string): number {
+  const text = content.trim();
+  const length = text.length;
+  const isDenseOpening = /欢迎|来到|主办方|联合主办|承办|协办|指导单位|活动现场|我是今天的主持人|我们将围绕/.test(text);
+  const isCarefulCue = /请|有序|静音|感谢配合|致谢|感谢|结束|颁奖|默哀|合影/.test(text);
+
+  if (isDenseOpening && length >= 80) return 30;
+  if (length >= 120) return 30;
+  if (length >= 70) return 20;
+  if (isCarefulCue && length <= 36) return 0;
+  if (isCarefulCue) return 10;
+  return 0;
+}
+
+function normalizeSpeechRate(rate: number | undefined, content: string): number {
+  const heuristicRate = inferSpeechRate(content);
+  if (typeof rate === "number") {
+    const normalized = clampSpeechRate(rate);
+    if (heuristicRate >= 20 && normalized < heuristicRate) {
+      return heuristicRate;
+    }
+    return normalized;
+  }
+  return heuristicRate;
 }
 
 function normalizeScriptLines(lines: GeneratedScriptLine[]) {
@@ -32,6 +64,7 @@ function normalizeScriptLines(lines: GeneratedScriptLine[]) {
       speaker: line.speaker || "host",
       content: line.content!.trim(),
       advance_mode: normalizeAdvanceMode(line.advance_mode),
+      speech_rate: normalizeSpeechRate(line.speech_rate, line.content!.trim()),
     }));
 }
 
@@ -124,10 +157,10 @@ export async function multimodalAnalyze(
 export async function generateScriptFromAgenda(
   agendaText: string,
   eventTitle: string
-): Promise<Array<{ sort_order: number; speaker: string; content: string; advance_mode: AdvanceMode }>> {
+): Promise<Array<{ sort_order: number; speaker: string; content: string; advance_mode: AdvanceMode; speech_rate: number }>> {
   const systemPrompt = `你是一个专业的活动主持人台词撰写助手。
 
-根据用户提供的活动议程/流程安排，为主持人撰写自然、专业的口播台词，并为每一段台词判断播完后的推进方式。
+根据用户提供的活动议程/流程安排，为主持人撰写自然、专业的口播台词，并为每一段台词判断播完后的推进方式和建议语速。
 
 ## 核心规则
 1. **创作台词**：根据议程内容撰写适合口播的主持人台词，语言自然流畅，适合现场朗读
@@ -140,9 +173,16 @@ export async function generateScriptFromAgenda(
    - "listen": 当前段播完后，需要等待嘉宾、观众或其他外部发言/互动结束，再播下一段
    - "manual": 当前段播完后，应等待工作人员或主持人手动确认，再继续
    - 如果无法确定，默认使用 "listen"
+7. **speech_rate 字段**：必须返回整数，范围 [-50, 100]
+   - 0 表示标准语速
+   - 30 约等于 1.3 倍速，适合信息量大但需要保持利落推进的开场、主办方介绍、议程概览
+   - 10 到 20 适合普通过渡段
+   - 负数适合需要更稳、更郑重、更慢的表达
+   - 如果无法确定，默认使用 0
+   - 语速要同时考虑内容长度和信息重要程度：内容越长、说明性越强，可略快；涉及重要人名、感谢、正式收束时不要过快
 
 ## 输出格式
-仅返回一个合法的 JSON 数组，每个元素包含：{sort_order, speaker, content, advance_mode}
+仅返回一个合法的 JSON 数组，每个元素包含：{sort_order, speaker, content, advance_mode, speech_rate}
 不要包含任何解释说明，仅返回 JSON 数组。`;
 
   const userPrompt = `活动名称: ${eventTitle}\n\n议程/流程:\n${agendaText}\n\n请为主持人撰写口播台词，返回 JSON 数组。`;
@@ -168,7 +208,7 @@ export async function generateScriptFromAgenda(
 export async function generateScript(
   agendaText: string,
   eventTitle: string
-): Promise<Array<{ sort_order: number; speaker: string; content: string; advance_mode: AdvanceMode }>> {
+): Promise<Array<{ sort_order: number; speaker: string; content: string; advance_mode: AdvanceMode; speech_rate: number }>> {
   const systemPrompt = `你是一个专业的活动主持稿拆分助手。
 
 你的任务是：从用户提供的原始活动文稿中，提取出需要口播的主持人台词，并按“现场实际会如何一段一段说出来”的方式，拆分为结构化 script lines。
@@ -249,6 +289,20 @@ export async function generateScript(
 
 判断 advance_mode 时，要基于整份文稿的上下文，而不是只看当前段内容。
 
+### 9. speech_rate 规则
+你必须为每一段 content 额外输出一个 speech_rate 字段，用来表示建议语速，取值必须是整数，范围 [-50, 100]：
+- 0：标准语速
+- 10 到 20：略快，适合普通说明、过渡、流程引导
+- 30：明显更利落，适合内容较多的开场段、主办方介绍、活动价值说明、议程总览
+- 负数：更稳、更慢，适合郑重表达、感谢、收束、重要提醒
+
+判断 speech_rate 时要同时考虑：
+- 内容长度：越长、越密集的说明性内容，可以适当更快
+- 信息重要程度：涉及嘉宾姓名、机构名称、感谢与结尾时，不要过快
+- 现场可懂度：宁可稳一点，也不要快到影响理解
+
+如果无法确定，默认使用 0。
+
 ## 输出格式
 只返回一个合法的 JSON 数组。
 数组每个元素格式如下：
@@ -257,7 +311,8 @@ export async function generateScript(
   "sort_order": 1,
   "speaker": "host",
   "content": "这里是一整段连续口播内容",
-  "advance_mode": "listen"
+  "advance_mode": "listen",
+  "speech_rate": 0
 }
 
 ## 输出要求
@@ -295,7 +350,7 @@ ${agendaText}
 export async function generateScriptFromImage(
   imageBase64: string,
   eventTitle: string
-): Promise<Array<{ sort_order: number; speaker: string; content: string; advance_mode: AdvanceMode }>> {
+): Promise<Array<{ sort_order: number; speaker: string; content: string; advance_mode: AdvanceMode; speech_rate: number }>> {
   // Step 1: Use multimodal API to extract text from the image
   const imageUrl = imageBase64.startsWith("data:")
     ? imageBase64

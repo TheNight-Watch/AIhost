@@ -5,7 +5,7 @@ import { resolveVoiceForLine } from "@/lib/voice-assignment";
 
 export async function POST(request: NextRequest) {
   try {
-    const { line_id, event_id, content, voice_type } = await request.json();
+    const { line_id, event_id, content, voice_type, speech_rate } = await request.json();
 
     if (!line_id || !content) {
       return NextResponse.json({ error: "line_id and content are required" }, { status: 400 });
@@ -43,6 +43,7 @@ export async function POST(request: NextRequest) {
     // Generate audio
     const audioBase64 = await textToSpeechBase64(content, {
       voice_type: resolvedVoice,
+      speech_rate,
     });
 
     const audioBuffer = Buffer.from(audioBase64, "base64");

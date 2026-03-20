@@ -13,12 +13,12 @@ interface GenerateScriptRequest {
 
 function generateFallbackScript() {
   return [
-    { sort_order: 1, speaker: "host", content: "各位嘉宾、各位朋友，大家上午好！欢迎来到本次活动。我是今天的 AI 主持人，非常荣幸能与大家共度这段精彩的时光。", advance_mode: "continue" as AdvanceMode, duration_ms: 12000 },
-    { sort_order: 2, speaker: "host", content: "今天的活动汇聚了来自各界的嘉宾，我们将共同探讨重要议题，期待大家积极参与互动。", advance_mode: "continue" as AdvanceMode, duration_ms: 10000 },
-    { sort_order: 3, speaker: "host", content: "首先，让我们按照议程，开始今天的第一个环节。请大家保持手机静音，专心聆听。", advance_mode: "listen" as AdvanceMode, duration_ms: 9000 },
-    { sort_order: 4, speaker: "host", content: "感谢各位嘉宾的精彩分享。接下来是茶歇时间，请各位前往休息区，我们将在 15 分钟后继续。", advance_mode: "manual" as AdvanceMode, duration_ms: 9000 },
-    { sort_order: 5, speaker: "host", content: "欢迎回来！现在进入互动交流环节，欢迎大家踊跃提问，共同探讨。", advance_mode: "listen" as AdvanceMode, duration_ms: 8000 },
-    { sort_order: 6, speaker: "host", content: "今天的活动到此圆满结束。感谢所有嘉宾的精彩分享，感谢每一位到场的朋友。期待下次再见！", advance_mode: "manual" as AdvanceMode, duration_ms: 10000 },
+    { sort_order: 1, speaker: "host", content: "各位嘉宾、各位朋友，大家上午好！欢迎来到本次活动。我是今天的 AI 主持人，非常荣幸能与大家共度这段精彩的时光。", advance_mode: "continue" as AdvanceMode, speech_rate: 30, duration_ms: 12000 },
+    { sort_order: 2, speaker: "host", content: "今天的活动汇聚了来自各界的嘉宾，我们将共同探讨重要议题，期待大家积极参与互动。", advance_mode: "continue" as AdvanceMode, speech_rate: 20, duration_ms: 10000 },
+    { sort_order: 3, speaker: "host", content: "首先，让我们按照议程，开始今天的第一个环节。请大家保持手机静音，专心聆听。", advance_mode: "listen" as AdvanceMode, speech_rate: 10, duration_ms: 9000 },
+    { sort_order: 4, speaker: "host", content: "感谢各位嘉宾的精彩分享。接下来是茶歇时间，请各位前往休息区，我们将在 15 分钟后继续。", advance_mode: "manual" as AdvanceMode, speech_rate: 0, duration_ms: 9000 },
+    { sort_order: 5, speaker: "host", content: "欢迎回来！现在进入互动交流环节，欢迎大家踊跃提问，共同探讨。", advance_mode: "listen" as AdvanceMode, speech_rate: 10, duration_ms: 8000 },
+    { sort_order: 6, speaker: "host", content: "今天的活动到此圆满结束。感谢所有嘉宾的精彩分享，感谢每一位到场的朋友。期待下次再见！", advance_mode: "manual" as AdvanceMode, speech_rate: -5, duration_ms: 10000 },
   ];
 }
 
@@ -66,6 +66,7 @@ export async function POST(request: NextRequest) {
         speaker: line.speaker || "host",
         content: line.content,
         advance_mode: line.advance_mode || "listen",
+        speech_rate: line.speech_rate ?? 0,
         duration_ms: Math.round(line.content.length * 150), // rough estimate
         audio_needs_regen: false,
       }));
@@ -113,6 +114,7 @@ export async function POST(request: NextRequest) {
               speaker: line.speaker,
               content: line.content,
               advance_mode: line.advance_mode,
+              speech_rate: line.speech_rate,
               duration_ms: line.duration_ms,
               audio_needs_regen: false,
             }))

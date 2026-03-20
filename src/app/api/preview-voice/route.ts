@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "voice_type and text are required" }, { status: 400 });
     }
 
-    const audioBuffer = await textToSpeech(text, { voice_type });
+    const audioBuffer = await textToSpeech(text, { voice_type, speech_rate: 0 });
 
     return new NextResponse(new Uint8Array(audioBuffer), {
       status: 200,
