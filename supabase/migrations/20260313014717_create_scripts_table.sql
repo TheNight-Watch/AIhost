@@ -1,0 +1,3 @@
+-- Legacy baseline migration already applied on the remote database before
+-- this repository's numeric migration files were introduced.
+-- This file exists only to align local and remote migration histories.

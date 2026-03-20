@@ -3,6 +3,10 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { textToSpeechBase64 } from "@/lib/doubao/tts";
 import { resolveVoiceForLine } from "@/lib/voice-assignment";
 
+function withCacheBust(url: string): string {
+  return `${url}${url.includes("?") ? "&" : "?"}v=${Date.now()}`;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { line_id, event_id, content, voice_type, speech_rate } = await request.json();
@@ -64,7 +68,7 @@ export async function POST(request: NextRequest) {
 
       if (!uploadError) {
         const { data: { publicUrl } } = supabase.storage.from("audio").getPublicUrl(fileName);
-        audioUrl = publicUrl;
+        audioUrl = withCacheBust(publicUrl);
 
         // Update script line record
         await supabase
