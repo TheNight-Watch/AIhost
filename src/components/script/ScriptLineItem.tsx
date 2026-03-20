@@ -12,6 +12,7 @@ interface Props {
   onContentChange: (id: string, content: string) => void;
   onAdvanceModeChange: (id: string, advanceMode: AdvanceMode) => void;
   onSpeechRateChange: (id: string, speechRate: number) => void;
+  onSilenceDurationChange: (id: string, silenceDuration: number) => void;
   onGenerateAudio: (id: string) => Promise<void>;
   onPlayPause: (line: ScriptLine) => void;
   broadcastMode?: boolean;
@@ -30,6 +31,7 @@ export default function ScriptLineItem({
   onContentChange,
   onAdvanceModeChange,
   onSpeechRateChange,
+  onSilenceDurationChange,
   onGenerateAudio,
   onPlayPause,
   broadcastMode,
@@ -221,6 +223,34 @@ export default function ScriptLineItem({
               outline: "none",
             }}
             title="Speech rate"
+          />
+        </label>
+        <label style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+          <span style={{ fontSize: "9px", letterSpacing: "0.08em", color: "#999" }}>TAIL MS</span>
+          <input
+            type="number"
+            min={0}
+            max={30000}
+            step={100}
+            value={line.silence_duration}
+            onChange={(e) => {
+              e.stopPropagation();
+              onSilenceDurationChange(line.id, Number(e.target.value));
+            }}
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: "100%",
+              fontFamily: "var(--font-mono)",
+              fontSize: "10px",
+              fontWeight: 700,
+              color: "#2D6A5C",
+              background: "#FFFDF5",
+              border: "1px solid #cbd5cf",
+              borderRadius: "7px",
+              padding: "4px 6px",
+              outline: "none",
+            }}
+            title="Ending silence in milliseconds"
           />
         </label>
       </div>

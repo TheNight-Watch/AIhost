@@ -123,6 +123,38 @@ export default function ScriptLineList({
     }
   }
 
+  async function handleSilenceDurationChange(id: string, silenceDuration: number) {
+    const normalized = Math.max(0, Math.min(30000, Math.round(silenceDuration)));
+    const updatedLines = lines.map((line) =>
+      line.id === id
+        ? {
+            ...line,
+            silence_duration: normalized,
+            audio_url: null,
+            duration_ms: 0,
+            audio_needs_regen: true,
+          }
+        : line
+    );
+    onLinesUpdate(updatedLines);
+
+    try {
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      await supabase
+        .from("script_lines")
+        .update({
+          silence_duration: normalized,
+          audio_url: null,
+          duration_ms: 0,
+          audio_needs_regen: true,
+        })
+        .eq("id", id);
+    } catch (err) {
+      console.error("Failed to update silence duration:", err);
+    }
+  }
+
   async function handleAdvanceModeChange(id: string, advanceMode: AdvanceMode) {
     const updatedLines = lines.map((line) =>
       line.id === id ? { ...line, advance_mode: advanceMode } : line
@@ -147,6 +179,7 @@ export default function ScriptLineList({
       content: "",
       advance_mode: "listen",
       speech_rate: 0,
+      silence_duration: 0,
       audio_url: null,
       duration_ms: 0,
       audio_needs_regen: false,
@@ -171,6 +204,7 @@ export default function ScriptLineList({
         content: newLine.content,
         advance_mode: newLine.advance_mode,
         speech_rate: newLine.speech_rate,
+        silence_duration: newLine.silence_duration,
         audio_url: null,
         duration_ms: 0,
         audio_needs_regen: false,
@@ -275,6 +309,7 @@ export default function ScriptLineList({
         content: line.content,
         voice_type: voiceType || "zh_female_vv_uranus_bigtts",
         speech_rate: line.speech_rate,
+        silence_duration: line.silence_duration,
       }),
     });
 
@@ -326,6 +361,7 @@ export default function ScriptLineList({
               ...line,
               advance_mode: line.advance_mode || "listen",
               speech_rate: typeof line.speech_rate === "number" ? line.speech_rate : 0,
+              silence_duration: typeof line.silence_duration === "number" ? line.silence_duration : 0,
               audio_needs_regen: line.audio_needs_regen ?? false,
             }))
           );
@@ -566,6 +602,7 @@ export default function ScriptLineList({
             onContentChange={handleContentChange}
             onAdvanceModeChange={handleAdvanceModeChange}
             onSpeechRateChange={handleSpeechRateChange}
+            onSilenceDurationChange={handleSilenceDurationChange}
             onGenerateAudio={handleGenerateAudio}
                 onPlayPause={handlePlayPause}
                 broadcastMode={broadcastMode}

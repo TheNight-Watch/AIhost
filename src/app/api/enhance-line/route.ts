@@ -32,12 +32,17 @@ export async function POST(request: Request) {
 2. 生成1-2句自然的过渡语，引用嘉宾的观点（如"刚才XX提到的...非常精彩"、"正如我们刚才听到的..."）
 3. 过渡语要简短精炼，每句不超过30字
 4. 语气要自然、热情、适合现场主持
-5. 只输出过渡语本身，不要有任何标记、引号或额外说明`;
+5. 如果过渡语中需要提到嘉宾姓名、机构名、项目名，必须优先复用“原始主持词”里已经出现的名称，不能自己猜测、改写、替换、纠正或补全名字
+6. 如果你不能从“原始主持词”中确认准确名称，就不要直接叫名字，改用“刚才嘉宾提到”“刚才老师分享到”等安全说法
+7. 只输出过渡语本身，不要有任何标记、引号或额外说明`;
 
     const userPrompt = `嘉宾演讲转录：
 ${transcript}
 
-请生成1-2句过渡衔接语。`;
+原始主持词（后面会原样接在你的过渡语后面）：
+${originalLine}
+
+请生成1-2句过渡衔接语。注意：如果需要提到嘉宾名字，只能使用原始主持词里已经出现的准确名字；如果原始主持词里没有明确名字，就不要自己补名字。`;
 
     const response = await fetch(`${ARK_BASE_URL}/chat/completions`, {
       method: "POST",
@@ -51,7 +56,7 @@ ${transcript}
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
         ],
-        temperature: 0.7,
+        temperature: 0.4,
         max_tokens: 150,
       }),
     });

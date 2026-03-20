@@ -70,6 +70,7 @@ export function useBroadcastEngine(lines: ScriptLine[], enhanceMode: boolean, vo
   const enhancedAudioBase64Ref = useRef<string | null>(null); // pre-generated enhanced audio
   const enhancedTextRef = useRef<string | null>(null); // the enhanced line text
   const enhanceStatusRef = useRef<EnhanceStatus>("idle");
+  const enhancedLineIndexRef = useRef<number>(-1);
 
   // Keep refs fresh
   useEffect(() => { linesRef.current = lines; }, [lines]);
@@ -101,6 +102,19 @@ export function useBroadcastEngine(lines: ScriptLine[], enhanceMode: boolean, vo
     setEnhanceStatus(s);
   }, []);
 
+  const setEnhancedLineIndexSync = useCallback((index: number) => {
+    enhancedLineIndexRef.current = index;
+    setEnhancedLineIndex(index);
+  }, []);
+
+  const clearEnhancedPlaybackState = useCallback(() => {
+    enhancedAudioBase64Ref.current = null;
+    enhancedTextRef.current = null;
+    setEnhanceStatusSync("idle");
+    setEnhancedText(null);
+    setEnhancedLineIndexSync(-1);
+  }, [setEnhanceStatusSync, setEnhancedLineIndexSync]);
+
   const getAdvanceMode = useCallback((line?: ScriptLine): AdvanceMode => {
     return line?.advance_mode || "listen";
   }, []);
@@ -111,10 +125,11 @@ export function useBroadcastEngine(lines: ScriptLine[], enhanceMode: boolean, vo
     enhanceTriggeredRef.current = false;
     enhancedAudioBase64Ref.current = null;
     enhancedTextRef.current = null;
+    enhancedLineIndexRef.current = -1;
     setEnhanceStatusSync("idle");
     setEnhancedText(null);
-    setEnhancedLineIndex(-1);
-  }, [setEnhanceStatusSync]);
+    setEnhancedLineIndexSync(-1);
+  }, [setEnhanceStatusSync, setEnhancedLineIndexSync]);
 
   // ── Stop silence check timer ──
   const stopSilenceTimer = useCallback(() => {
@@ -186,11 +201,14 @@ export function useBroadcastEngine(lines: ScriptLine[], enhanceMode: boolean, vo
     // Check if we have an enhanced version for this line
     const useEnhanced = enhanceModeRef.current
       && enhanceStatusRef.current === "ready"
-      && enhancedAudioBase64Ref.current;
+      && enhancedAudioBase64Ref.current
+      && enhancedLineIndexRef.current === index;
 
     if (useEnhanced) {
       addLog(`[ENGINE] Playing ENHANCED line ${index + 1}: "${enhancedTextRef.current?.slice(0, 60)}..."`);
-      playAudio({ base64: enhancedAudioBase64Ref.current! }, () => {
+      const enhancedAudio = enhancedAudioBase64Ref.current!;
+      clearEnhancedPlaybackState();
+      playAudio({ base64: enhancedAudio }, () => {
         addLog(`[ENGINE] Enhanced line ${index + 1} audio finished`);
         afterHostLinePlayed(index);
       });
@@ -207,7 +225,7 @@ export function useBroadcastEngine(lines: ScriptLine[], enhanceMode: boolean, vo
       });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [addLog, setPhaseSync, setIndexSync, playAudio]);
+  }, [addLog, setPhaseSync, setIndexSync, playAudio, clearEnhancedPlaybackState]);
 
   // ── After a host line finishes playing ──
   const afterHostLinePlayed = useCallback((index: number) => {
@@ -266,7 +284,7 @@ export function useBroadcastEngine(lines: ScriptLine[], enhanceMode: boolean, vo
 
       enhancedTextRef.current = enhanceData.enhancedLine;
       setEnhancedText(enhanceData.enhancedLine);
-      setEnhancedLineIndex(nextIndex);
+      setEnhancedLineIndexSync(nextIndex);
       addLog(`[ENHANCE] Generated: "${enhanceData.referenceSentences}"`);
 
       // Step 2: Generate TTS for enhanced line
@@ -293,7 +311,7 @@ export function useBroadcastEngine(lines: ScriptLine[], enhanceMode: boolean, vo
       addLog(`[ENHANCE] Error: ${err}`);
       setEnhanceStatusSync("failed");
     }
-  }, [addLog, setEnhanceStatusSync]);
+  }, [addLog, setEnhanceStatusSync, setEnhancedLineIndexSync]);
 
   // ── Trigger: called when silence > 1s AND hasYes ──
   const triggerNextLine = useCallback((nextIndex: number) => {

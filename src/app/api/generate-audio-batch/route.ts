@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
         .single(),
       supabase
         .from("script_lines")
-        .select("id, content, speaker, sort_order, speech_rate")
+        .select("id, content, speaker, sort_order, speech_rate, silence_duration")
         .eq("event_id", event_id)
         .order("sort_order"),
     ]);
@@ -52,6 +52,7 @@ export async function POST(request: NextRequest) {
         const audioBase64 = await textToSpeechBase64(line.content, {
           voice_type: resolvedVoice,
           speech_rate: line.speech_rate ?? 0,
+          silence_duration: line.silence_duration ?? 0,
         });
 
         const audioBuffer = Buffer.from(audioBase64, "base64");

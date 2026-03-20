@@ -37,6 +37,7 @@ export type EventStatus = "draft" | "ready" | "live" | "completed";
 export type AdvanceMode = "listen" | "continue" | "manual";
 export type VoiceMode = "single" | "dual_alternate";
 export type SpeechRate = number;
+export type SilenceDuration = number;
 
 export interface Event {
   id: string;
@@ -60,6 +61,7 @@ export interface ScriptLine {
   content: string;
   advance_mode: AdvanceMode;
   speech_rate: SpeechRate;
+  silence_duration: SilenceDuration;
   audio_url: string | null;
   duration_ms: number | null;
   audio_needs_regen: boolean;

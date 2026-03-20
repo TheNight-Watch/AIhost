@@ -9,7 +9,7 @@ function withCacheBust(url: string): string {
 
 export async function POST(request: NextRequest) {
   try {
-    const { line_id, event_id, content, voice_type, speech_rate } = await request.json();
+    const { line_id, event_id, content, voice_type, speech_rate, silence_duration } = await request.json();
 
     if (!line_id || !content) {
       return NextResponse.json({ error: "line_id and content are required" }, { status: 400 });
@@ -48,6 +48,7 @@ export async function POST(request: NextRequest) {
     const audioBase64 = await textToSpeechBase64(content, {
       voice_type: resolvedVoice,
       speech_rate,
+      silence_duration,
     });
 
     const audioBuffer = Buffer.from(audioBase64, "base64");
