@@ -34,8 +34,11 @@ export async function middleware(request: NextRequest) {
 
   // Update Supabase auth session (also refreshes tokens)
   let response: NextResponse;
+  let user = null;
   try {
-    response = await updateSession(request);
+    const session = await updateSession(request);
+    response = session.response;
+    user = session.user;
   } catch {
     // Supabase not configured — skip auth checks
     return NextResponse.next();
@@ -48,21 +51,6 @@ export async function middleware(request: NextRequest) {
 
   if (isLocaleRoot || isProtected || isAuthPage) {
     try {
-      const { createServerClient } = await import("@supabase/ssr");
-      const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-          cookies: {
-            getAll() {
-              return request.cookies.getAll();
-            },
-            setAll() {},
-          },
-        },
-      );
-      const { data: { user } } = await supabase.auth.getUser();
-
       if (isLocaleRoot) {
         const url = request.nextUrl.clone();
         url.pathname = user ? `/${locale}/dashboard` : `/${locale}/login`;
